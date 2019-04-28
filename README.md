@@ -1,4 +1,4 @@
-#Camper-Logger
+# Camper-Logger
 
 This is the firmware for an ESP32-based data logger for campers.
 
