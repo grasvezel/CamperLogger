@@ -1,0 +1,5 @@
+*.zip
+*.bin
+/data
+_Changelog.ino
+
