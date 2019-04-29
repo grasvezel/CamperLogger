@@ -75,6 +75,11 @@ void callHome() {
   }
 }
 
+void reportInventory() {
+  // in the future, we will report the inventory on startup.
+  return;
+}
+
 String getVarFromString(String var, String cfgData) {
   String line;
   String curChar;
@@ -208,4 +213,3 @@ String httpGet(String path, String query) {
     return responseCode;
   }
 }
-

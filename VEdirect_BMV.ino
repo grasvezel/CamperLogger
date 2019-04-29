@@ -20,56 +20,55 @@ String readVEdirectBMV() {
 
   while (valuesread < 7 && !timeOutReached(vedirect_timeout)) {
     while (SerialVE.available() > 0 && !timeOutReached(vedirect_timeout)) {
-      WebServer.handleClient();
       digitalWrite(PIN_EXT_LED, HIGH);
       character = SerialVE.read();
       if (character == '\n') {
         // regel einde
         if (line.startsWith("V\t")) {
-          Vbatt = line.substring(2).toFloat() / 1000;
-          if(Vbatt > 3) {
+          readings.BMV_Vbatt = line.substring(2).toFloat() / 1000;
+          if(readings.BMV_Vbatt > 3) {
             valuesread++;
-            Serial.println("Accuspanning        : " + String(Vbatt) + "V");
-            text += "&Ub=" + String(Vbatt);
+            Serial.println("Accuspanning        : " + String(readings.BMV_Vbatt) + "V");
+            text += "&Ub=" + String(readings.BMV_Vbatt);
           }
         }
         if (line.startsWith("VS\t") || line.startsWith("VM\t")) {
-          Vaux = line.substring(3).toFloat() / 1000;
-          if(Vaux > 1.5) {
+          readings.BMV_Vaux = line.substring(3).toFloat() / 1000;
+          if(readings.BMV_Vaux > 1.5) {
             valuesread++;
-            Serial.println("12V spanning        : " + String(Vaux) + "V");
-            text += "&Um=" + String(Vaux);
+            Serial.println("12V spanning        : " + String(readings.BMV_Vaux) + "V");
+            text += "&Um=" + String(readings.BMV_Vaux);
           }
         }
         if (line.startsWith("SOC\t")) {
           valuesread++;
-          SOC = line.substring(4).toFloat() / 10;
-          Serial.println("State of Charge     : " + String(SOC) + "%");
-          text += "&SOC=" + String(SOC);
+          readings.BMV_SOC = line.substring(4).toFloat() / 10;
+          Serial.println("State of Charge     : " + String(readings.BMV_SOC) + "%");
+          text += "&SOC=" + String(readings.BMV_SOC);
         }
         if (line.startsWith("I\t")) {
           valuesread++;
-          Ibatt = line.substring(2).toFloat() / 1000;
-          Serial.println("Accustroom          : " + String(Ibatt) + "A");
-          text += "&Ib=" + String(Ibatt);
+          readings.BMV_Ibatt = line.substring(2).toFloat() / 1000;
+          Serial.println("Accustroom          : " + String(readings.BMV_Ibatt) + "A");
+          text += "&Ib=" + String(readings.BMV_Ibatt);
         }
         if (line.startsWith("TTG\t")) {
           valuesread++;
-          TTG = line.substring(4).toFloat();
-          Serial.println("Time to go          : " + String(TTG) + "min");
-          text += "&TTG=" + String(TTG);
+          readings.BMV_TTG = line.substring(4).toFloat();
+          Serial.println("Time to go          : " + String(readings.BMV_TTG) + "min");
+          text += "&TTG=" + String(readings.BMV_TTG);
         }
         if (line.startsWith("H2\t")) {
           valuesread++;
-          LDD = line.substring(3).toFloat() / 1000;
-          Serial.println("Last Discharge Depth: " + String(LDD ) + "Ah");
-          text += "&LDD=" + String(LDD);
+          readings.BMV_LDD = line.substring(3).toFloat() / 1000;
+          Serial.println("Last Discharge Depth: " + String(readings.BMV_LDD ) + "Ah");
+          text += "&LDD=" + String(readings.BMV_LDD);
         }
         if (line.startsWith("P\t")) {
           valuesread++;
-          Pcharge = line.substring(2).toFloat();
-          Serial.println("Laadvermogen        : " + String(Pcharge) + "W");
-          text += "&Pb=" + String(int(Pcharge));
+          readings.BMV_Pcharge = line.substring(2).toFloat();
+          Serial.println("Laadvermogen        : " + String(readings.BMV_Pcharge) + "W");
+          text += "&Pb=" + String(int(readings.BMV_Pcharge));
         }
         Serial.println(line);
         line = "";
@@ -80,17 +79,18 @@ String readVEdirectBMV() {
     digitalWrite(PIN_EXT_LED, LOW);
   }
   if(valuesread == 7) {
-    lastTelegramBMV  = "Accuspanning      : " + String(Vbatt) + "V\n";
-    lastTelegramBMV += "Middenspanning    : " + String(Vaux) + "V\n";
-    lastTelegramBMV += "Laadstatus (SOC)  : " + String(SOC) + "%\n";
-    lastTelegramBMV += "Laadstroom        : " + String(Ibatt) + "A\n";
-    lastTelegramBMV += "Laadvermogen      : " + String(Pcharge) + "W\n";
-    lastTelegramBMV += "Time to Go        : " + String(TTG) + "\n";
-    lastTelegramBMV += "Laatste ontlading : " + String(LDD) + "Ah\n";
+    lastTelegramBMV  = "Accuspanning      : " + String(readings.BMV_Vbatt) + "V\n";
+    lastTelegramBMV += "Middenspanning    : " + String(readings.BMV_Vaux) + "V\n";
+    lastTelegramBMV += "Laadstatus (SOC)  : " + String(readings.BMV_SOC) + "%\n";
+    lastTelegramBMV += "Laadstroom        : " + String(readings.BMV_Ibatt) + "A\n";
+    lastTelegramBMV += "Laadvermogen      : " + String(readings.BMV_Pcharge) + "W\n";
+    lastTelegramBMV += "Time to Go        : " + String(readings.BMV_TTG) + "\n";
+    lastTelegramBMV += "Laatste ontlading : " + String(readings.BMV_LDD) + "Ah\n";
+    BMV_present = 1;
     return(text);
   } else {
     // timeout reading ve.direct
     addLog(LOG_LEVEL_ERROR, "VICTR: Timeout reading VE.direct (BMV)");
-    return("");
+    return("&BMV=timeout&valuesread=" + String(valuesread));
   }
 }

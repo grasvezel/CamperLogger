@@ -4,6 +4,7 @@ void WebServerInit() {
   // Prepare webserver pages
   WebServer.on("/", handle_root);
   WebServer.on("/status", handle_status);
+  WebServer.on("/mppttelegram", handle_mppt_telegram);
   WebServer.on("/cfg", handle_wificonfig);
   WebServer.on("/savecfg", handle_saveconfig);
 
@@ -73,6 +74,26 @@ void handle_root() {
     content += "Laatste meetwaarden:\n";
     content += "<pre>\n";
     content += lastTelegramBMV;
+    content += "</pre>";
+    WebServer.send(200, "text/html", content);
+    if(timerAPoff != 0)
+      timerAPoff = millis() + 10000L;
+  } else {
+    addLog(LOG_LEVEL_INFO, "WEB  : Not connected to WiFi, redirecting to config page");
+    WebServer.sendContent("HTTP/1.1 302\r\nLocation: /cfg\r\n");
+  }
+  statusLED(false);
+}
+
+void handle_mppt_telegram() {
+  statusLED(true);
+  addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /mppttelegram"));
+  if(WiFi.status() == WL_CONNECTED) {
+    String content;
+    content = readFile("/head.html");
+    content += "Laatste MPPT telegram:\n";
+    content += "<pre>\n";
+    content += lastTelegramMPPT;
     content += "</pre>";
     WebServer.send(200, "text/html", content);
     if(timerAPoff != 0)
