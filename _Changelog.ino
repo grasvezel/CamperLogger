@@ -7,6 +7,16 @@
  * Settings need to be saved to SPIFFS
  * Add config for scanning 1-wire bus and autoconfigure the address(es) for the temp sensor(s).
 
+  Version 1.17
+  Bugfixes in the multitasking code. I had to bump the version number in order to force OTA updates.
+
+  Version 1.11
+  First attempt on doing some multitasking. Reading both VE.direct inputs is now moved to CPU0.
+    
+  Version 1.10
+  All readings are now stored in a struct.
+  /mppttelegram now shows last MPPT telegram
+  
   Version 1.09
   Changed the way temperature sensors are handled. Addresses do not need to be known upfront,
   the oneWire bus is now scanned. Temperatures are reported in the order the sensors are

@@ -31,9 +31,9 @@ void addLog(byte level, String line) {
     return;
   }
   if(sysTime > 1000) {
-    line = formattedDate() + " " + formattedTime() + " " + line + "\n";
+    line = formattedDate() + " " + formattedTime() + " CPU" + String(xPortGetCoreID()) + " " + line + "\n";
   } else {
-    line = "00-00-0000 00:00:00 " + line + "\n";
+    line = "00-00-0000 00:00:00 CPU" + String(xPortGetCoreID()) + " " + line + "\n";
   }
   Serial.print(line);
 }
@@ -42,7 +42,7 @@ void addLogNoTime(byte level, String line) {
   if(level > logLevel) {
     return;
   }
-  line = "                    " + line + "\n";
+  line = "                    CPU" + String(xPortGetCoreID()) + " " + line + "\n";
   Serial.print(line);
 }
 
@@ -397,4 +397,3 @@ boolean readFromRTC(byte* data)
   }
   return false;
 }
-

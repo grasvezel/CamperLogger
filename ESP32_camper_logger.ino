@@ -34,8 +34,8 @@ String readVEdirectMPPT();
 
 String getFileChecksum( String );
 
-static float version              = 1.09;
-static String verstr              = "Version 1.09"; // Make sure we can grep version from binary image
+static float version              = 1.17;
+static String verstr              = "Version 1.17"; // Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -58,7 +58,7 @@ byte logLevel                     = 4;                // not a #define, logLevel
 #define DEFAULT_LOG_HOST            "bus.tarthorst.net"
 #define LOG_INTERVAL                60                // In seconds
 
-// Config AP setting
+// AP password
 #define DEFAULT_PASSWORD            "poespuckje"
 
 // PIN DEFINITIONS
@@ -89,22 +89,68 @@ struct SettingsStruct {
   byte          DST;
 } Settings;
 
+struct readingsStruct {
+  // Temperature sensors
+  float temp[10];   // max 10 temperature sensors (deg C)
+  
+  // BMV vars
+  float BMV_Vbatt;   // BMV battery voltage (V)
+  float BMV_Vaux;    // BMV auxilary voltage (V)
+  float BMV_SOC;     // BMV State Of Charge (%)
+  float BMV_Ibatt ;  // BMV battery current (A)
+  int   BMV_Pcharge; // BMV charge power (W)
+  int   BMV_TTG;     // BMV Time To Go (minutes)
+  float BMV_LDD;     // BMV Last Discharge Depth (Ah)
+  
+  // MPPT vars
+  float MPPT_ytot;   // MPPT yield total (kWh)    H19
+  float MPPT_yday;   // MPPT yield today (kWh)    H20
+  int   MPPT_Pmax;   // MPPT max power today (W)  H21
+  int   MPPT_err;    // MPPT error number         ERR
+  int   MPPT_state;  // MPPT state                CS
+  float MPPT_Vbatt;  // MPPT output voltage (V)   V
+  float MPPT_Ibatt;  // MPPT output current (A)   I
+  float MPPT_Vpv;    // MPPT input voltage (V)    VPV
+  int   MPPT_Ppv;    // MPPT input power (W)      PPV
+  
+  // GPS readings
+  int    GPS_status; // GPS status (1=active 0=timeout -1=void)
+  String GPS_date;   // GPS date DDMMYY
+  String GPS_time;   // GPS time HHMMSS (in UTC!)
+  String GPS_lat;    // GPS latitude (0...90 N or S)
+  String GPS_lon;    // GPS longitude (0...180 E or W)
+  String GPS_speed;  // GPS speed in km/h
+  String GPS_heading;// GPS heading (in deg, 0 if not moving)
+  
+  // water tank
+  int   Tank_level;  // Water tank level (%)
+} readings;
+
 // DATA COLLECTION VARIABLES
 String lastTelegramBMV = "";
 String lastTelegramMPPT = "";
 
-// Victron BMV vars
-float Vbatt;
-float Vaux;
-float SOC;
-float Ibatt;
-float Pcharge;
-float TTG;
-float LDD;
+// Since we are going to multitask, we want to avoid posting
+// data to the server while the values are being read.
+bool BMV_readings_valid  = 1;
+bool MPPT_readings_valid = 1;
+bool GPS_readings_valid  = 1;
+bool temp_readings_valid = 1;
+  
+// Strings containing GET vars (this is a temporary solution)
+String GET_temp = "";
+String GET_BMV  = "";
+String GET_MPPT = "";
+String GET_GPS  = "";
+String GET_tank = "";
 
-// ve direct stuff
-bool read_ve_direct_bmv  = 1;    // read BMV or skip it? Can be overridden from server.
-bool read_ve_direct_mppt = 1;    // read MPPT or skip it? Can be overridden from server.
+// toggle different data sources. Do we need this?
+bool read_ve_direct_bmv  = 1;    // read BMV or skip it?
+bool read_ve_direct_mppt = 1;    // read MPPT or skip it?
+bool read_temp           = 1;    // read temperature sensors or skip it?
+bool read_gps            = 1;    // read GPS data or skip it?
+bool read_tank_level     = 1;    // read tank level sensor or skip it?
+
 bool  charge12v = 0;
 
 String request;
@@ -125,13 +171,19 @@ unsigned long nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
 OneWire oneWire(ONEWIRE_PIN);
 
 ESP32WebServer WebServer(80);
-HardwareSerial SerialGPS(1);     // GPS input (NMEA)
-HardwareSerial SerialVE(2);      // VE direct connections (2 different rx pins, 1 uart)
 
+// Serial ports
+// UART 0 is used for the console. Because the ESP32 has 3 UARTs and we need 3,
+// HardwareSerial(2) is switched to the according pin if we want to read BMV or MPPT.
+HardwareSerial SerialGPS(1);     // GPS input (NMEA)
+HardwareSerial SerialVE(2);      // VE direct connections
+
+// Background tasks. Not in use atm.
 void backgroundTasks(void * parameter) {
   for(;;) {
-    // background tasks here
-    vTaskDelay(10 / portTICK_PERIOD_MS); // 10ms delay to avoid WDT being triggered
+    runBackgroundTasks();
+    // 10ms delay to avoid WDT being triggered
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -152,7 +204,7 @@ void setup() {
   xTaskCreatePinnedToCore(
     backgroundTasks,  // Task function
     "Background",     // Name
-    1000,             // Stack size
+    3000,             // Stack size
     NULL,             // Parameter
     1,                // priority
     &BackgroundTask,  // Task handle
@@ -218,34 +270,42 @@ void loop() {
 
     callHome();
 
-    // Victron BMV battery monitor
-    // This needs to run even if we are not connected.
-    // handleCharging() depends on these measurements.
-    
-    SerialVE.begin(19200, SERIAL_8N1, VE_DIRECT_PIN_1, -1, true);
-    if(read_ve_direct_bmv) {
-      request += readVEdirectBMV();
+    // BMV readings are fetched in the background. If the readings are not valid,
+    // the values are being read. That should not take too long, so we wait.
+    for(int i=0;i<3;i++) {
+      if(BMV_readings_valid) {
+        request += GET_BMV;
+        request += "&12vCharger=" + String(charge12v);
+        break;
+      }
+      delay(100); // wait 100ms before we retry
     }
-    SerialVE.end();
-    handleCharging();
+
+    // Same for MPPT
+    for(int i=0;i<3;i++) {
+      if(MPPT_readings_valid) {
+        request += GET_MPPT;
+        break;
+      }
+      delay(100); // wait 100ms before we retry
+    }
 
     if (WiFi.status() == WL_CONNECTED) {
       // GPS
-      request += handleGPS();
-    
-      // Victron MPPT charge controller
-      SerialVE.begin(19200, SERIAL_8N1, VE_DIRECT_PIN_2, -1, true);
-      if(read_ve_direct_mppt) {
-        request += readVEdirectMPPT();
+      if(read_gps) {
+        request += handleGPS();
       }
-      SerialVE.end();
-    
-      request += readTemperatureSensors();
+  
+      // Temperature sensors
+      if(read_temp) {
+        request += readTemperatureSensors();
+      }
+
+      // Tank level sensor
+      if(read_tank_level) {
+        request += readTankLevelSensor();
+      }
       
-      request += "&12vCharger=" + String(charge12v);
-
-      request += readTankLevelSensor();
-
       addLog(LOG_LEVEL_INFO, "DATA : Uploading readings to server");
       String response = httpsGet("/update/", request);
       addLog(LOG_LEVEL_DEBUG, "DATA : Response from server: " + response);

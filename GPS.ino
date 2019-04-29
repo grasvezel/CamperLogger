@@ -8,7 +8,7 @@ String handleGPS() {
   String GPSlon;
   String GPSspeedkt;
   String GPSspeedkm;
-  String GPSangle;
+  String GPSheading;
   String GPSdate;
   float  deg;
   float  mins;
@@ -52,26 +52,26 @@ String handleGPS() {
   float speed = GPSspeedkt.toFloat() * 1.852;
   GPSspeedkm = String(speed);
   sentence = sentence.substring(pointer+1);
-  // Angle
+  // Heading
   pointer = sentence.indexOf(",");
-  GPSangle = sentence.substring(0,pointer);
+  GPSheading = sentence.substring(0,pointer);
   sentence = sentence.substring(pointer+1);
-  if(GPSangle == "") {
-    GPSangle = "0";
+  if(GPSheading == "") {
+    GPSheading = "0";
   }
   // Date
   pointer = sentence.indexOf(",");
   GPSdate = sentence.substring(0,pointer);
   sentence = sentence.substring(pointer+1);
   
-//  Serial.println("GPS Time  : " + GPStime);
-//  Serial.println("GPS Status: " + GPSstatus);
-//  Serial.println("GPS Lat   : " + GPSlat);
-//  Serial.println("GPS Lon   : " + GPSlon);
-//  Serial.println("GPS Speed : " + GPSspeedkt);
-//  Serial.println("GPS Speed : " + GPSspeedkm);
-//  Serial.println("GPS Angle : " + GPSangle);
-//  Serial.println("GPS Date  : " + GPSdate);
+//  Serial.println("GPS Time   : " + GPStime);
+//  Serial.println("GPS Status : " + GPSstatus);
+//  Serial.println("GPS Lat    : " + GPSlat);
+//  Serial.println("GPS Lon    : " + GPSlon);
+//  Serial.println("GPS Speed  : " + GPSspeedkt);
+//  Serial.println("GPS Speed  : " + GPSspeedkm);
+//  Serial.println("GPS Heading: " + GPSheading);
+//  Serial.println("GPS Date   : " + GPSdate);
 
   if(GPSstatus == "A") {
     // fix is good, return data
@@ -80,7 +80,7 @@ String handleGPS() {
     data += "&GPSlat=" + GPSlat;
     data += "&GPSlon=" + GPSlon;
     data += "&GPSspeed=" + GPSspeedkm;
-    data += "&GPSheading=" + GPSangle;
+    data += "&GPSheading=" + GPSheading;
     data += "&GPSfix=active";
     return data;
   } else {
@@ -112,4 +112,3 @@ String getGPSsentence() {
     sentence = "";
     return "";
 }
-

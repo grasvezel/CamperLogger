@@ -1,16 +1,5 @@
 String readVEdirectMPPT() {
-  float mppt_yield_total;       // H19
-  float mppt_yield_today;       // H20
-  int   mppt_maxpow_today;      // H21
-  int   mppt_err;               // ERR
-  int   mppt_state;             // CS
-  float mppt_battery_voltage;   // V
-  float mppt_battery_current;   // I
-  float mppt_panel_voltage;     // VPV
-  int   mppt_panel_power;       // PPV
-
   String thisTelegram;
-
   String text = ""; // http GET data
   int valuesread = 0;
   char character;
@@ -24,13 +13,14 @@ String readVEdirectMPPT() {
   // Try to find the beginning of the telegram (empty line)
   // so we can start reading from the beginning.
   while (SerialVE.available() > 0 && !timeOutReached(vedirect_timeout)) {
+    vTaskDelay(10 / portTICK_PERIOD_MS);
     character = SerialVE.read();
     if (character == '\n' && prev_character == '\n') {
       break;
     }
     prev_character = character;
   }
-
+  
   while (valuesread < expectedvalues && !timeOutReached(vedirect_timeout)) {
     while (SerialVE.available() > 0 && !timeOutReached(vedirect_timeout)) {
       digitalWrite(PIN_EXT_LED, HIGH);
@@ -41,67 +31,67 @@ String readVEdirectMPPT() {
 
         // Battery voltage
         if (line.startsWith("V\t")) {
-          mppt_battery_voltage = line.substring(2).toFloat() / 1000;
-          if (mppt_battery_voltage > 3) {
+          readings.MPPT_Vbatt = line.substring(2).toFloat() / 1000;
+          if (readings.MPPT_Vbatt > 3) {
             valuesread++;
-            text += "&MUb=" + String(mppt_battery_voltage);
+            text += "&MUb=" + String(readings.MPPT_Vbatt);
           }
         }
 
         // Battery current
         if (line.startsWith("I\t")) {
-          mppt_battery_current = line.substring(2).toFloat() / 1000;
+          readings.MPPT_Ibatt = line.substring(2).toFloat() / 1000;
           valuesread++;
-          text += "&MIb=" + String(mppt_battery_current);
+          text += "&MIb=" + String(readings.MPPT_Ibatt);
         }
 
         // PV voltage
         if (line.startsWith("VPV\t")) {
-          mppt_panel_voltage = line.substring(4).toFloat() / 1000;
+          readings.MPPT_Vpv = line.substring(4).toFloat() / 1000;
           valuesread++;
-          text += "&MUpv=" + String(mppt_panel_voltage);
+          text += "&MUpv=" + String(readings.MPPT_Vpv);
         }
 
         // PV power
         if (line.startsWith("PPV\t")) {
           valuesread++;
-          mppt_panel_power = line.substring(4).toInt();
-          text += "&MPpv=" + String(mppt_panel_power);
+          readings.MPPT_Ppv = line.substring(4).toInt();
+          text += "&MPpv=" + String(readings.MPPT_Ppv);
         }
 
         // PV Max power today
         if (line.startsWith("H21\t")) {
           valuesread++;
-          mppt_maxpow_today = line.substring(4).toInt();
-          text += "&MPmxt=" + String(mppt_maxpow_today);
+          readings.MPPT_Pmax = line.substring(4).toInt();
+          text += "&MPmxt=" + String(readings.MPPT_Pmax);
         }
 
         // PV yield today
         if (line.startsWith("H20\t")) {
           valuesread++;
-          mppt_yield_today = line.substring(4).toFloat() / 100;
-          text += "&MYt=" + String(mppt_yield_today);
+          readings.MPPT_yday = line.substring(4).toFloat() / 100;
+          text += "&MYt=" + String(readings.MPPT_yday);
         }
 
         // PV yield total
         if (line.startsWith("H19\t")) {
           valuesread++;
-          mppt_yield_total = line.substring(4).toFloat() / 100;
-          text += "&MYtot=" + String(mppt_yield_total);
+          readings.MPPT_ytot = line.substring(4).toFloat() / 100;
+          text += "&MYtot=" + String(readings.MPPT_ytot);
         }
 
         // MPPT error number
         if (line.startsWith("ERR\t")) {
           valuesread++;
-          mppt_err = line.substring(4).toInt();
-          text += "&Merr=" + String(mppt_err);
+          readings.MPPT_err = line.substring(4).toInt();
+          text += "&Merr=" + String(readings.MPPT_err);
         }
 
         // MPPT charge state
         if (line.startsWith("CS\t")) {
           valuesread++;
-          mppt_state = line.substring(3).toInt();
-          text += "&Mstate=" + String(mppt_state);
+          readings.MPPT_state = line.substring(3).toInt();
+          text += "&Mstate=" + String(readings.MPPT_state);
         }
 
         line = "";
@@ -112,16 +102,11 @@ String readVEdirectMPPT() {
     digitalWrite(PIN_EXT_LED, LOW);
   }
 
-  if (valuesread == expectedvalues) {
-    lastTelegramMPPT  = "Accuspanning      : " + String(mppt_battery_voltage) + "V\n";
-    lastTelegramMPPT += "Accustroom        : " + String(mppt_battery_current) + "A\n";
-    lastTelegramMPPT += "Paneelspanning    : " + String(mppt_panel_voltage) + "V\n";
-    lastTelegramMPPT += "Paneelvermogen    : " + String(mppt_panel_power) + "W\n";
-    lastTelegramMPPT += "Pmax vandag       : " + String(mppt_maxpow_today) + "W\n";
-    lastTelegramMPPT += "Opbrengst vandaag : " + String(mppt_yield_today) + "kWh\n";
-    lastTelegramMPPT += "Opbrengst totaal  : " + String(mppt_yield_total) + "kWh\n";
-    lastTelegramMPPT += "State             : " + String(mppt_state) + "\n";
-    lastTelegramMPPT += "Error             : " + String(mppt_err) + "\n";
+  
+  // TODO: rather than counting values, we should find the end of the telegram
+  
+  if (valuesread == expectedvalues) {    
+    lastTelegramMPPT = thisTelegram;
     return (text);
   } else {
     // timeout reading ve.direct
