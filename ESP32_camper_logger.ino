@@ -34,8 +34,8 @@ String readVEdirectMPPT();
 
 String getFileChecksum( String );
 
-static float version              = 1.24;
-static String verstr              = "Version 1.24"; // Make sure we can grep version from binary image
+static float version              = 1.25;
+static String verstr              = "Version 1.25"; // Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
