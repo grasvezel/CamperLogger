@@ -34,8 +34,8 @@ String readVEdirectMPPT();
 
 String getFileChecksum( String );
 
-static float version              = 1.08;
-static String verstr              = "Version 1.08"; // Make sure we can grep version from binary image
+static float version              = 1.09;
+static String verstr              = "Version 1.09"; // Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -120,13 +120,9 @@ unsigned long timerAPoff    = millis() + 10000L;
 unsigned long timerLog      = millis() + LOG_INTERVAL * 1000L;
 unsigned long nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
 
-//const String BuitenSensorAdres = "28FF723501160360";
-//const String BinnenSensorAdres = "28FF13E000160397";
-DeviceAddress buitenSensor  = { 0x28, 0xFF, 0x72, 0x35, 0x01, 0x16, 0x03, 0x60 };
-DeviceAddress binnenSensor  = { 0x28, 0xFF, 0x13, 0xE0, 0x00, 0x16, 0x03, 0x97 };
+// please set temperature sensor addresses in TemperatureSenors.ino
 
-OneWire ds(ONEWIRE_PIN);
-DallasTemperature sensors(&ds);
+OneWire oneWire(ONEWIRE_PIN);
 
 ESP32WebServer WebServer(80);
 HardwareSerial SerialGPS(1);     // GPS input (NMEA)
@@ -190,10 +186,6 @@ void setup() {
   }
   delay(100);
   WebServerInit();
-
-  sensors.begin();
-  sensors.setResolution(buitenSensor,12);
-  sensors.setResolution(binnenSensor,12);
   
   // get the CRC of the current html file on SPIFFS
   Fcrc = getFileChecksum("/head.html");
@@ -248,14 +240,8 @@ void loop() {
       }
       SerialVE.end();
     
-      sensors.requestTemperatures();
-      sensors.requestTemperaturesByAddress(binnenSensor);
-      tmp = String(sensors.getTempC(binnenSensor));
-      request += "&Tbinnen=" + tmp; 
-      sensors.requestTemperaturesByAddress(buitenSensor);
-      tmp = String(sensors.getTempC(buitenSensor));
-      request += "&Tbuiten=" + tmp; 
-
+      request += readTemperatureSensors();
+      
       request += "&12vCharger=" + String(charge12v);
 
       request += readTankLevelSensor();
