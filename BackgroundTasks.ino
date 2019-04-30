@@ -5,7 +5,7 @@ void runBackgroundTasks() {
     if(read_ve_direct_bmv) {
       SerialVE.begin(19200, SERIAL_8N1, VE_DIRECT_PIN_1, -1, true);
       vTaskDelay(10 / portTICK_PERIOD_MS);
-      GET_BMV = readVEdirectBMV();
+      readVEdirectBMV();
       vTaskDelay(10 / portTICK_PERIOD_MS);
       SerialVE.end();
       handleCharging();
@@ -16,11 +16,12 @@ void runBackgroundTasks() {
     if(read_ve_direct_mppt) {
       SerialVE.begin(19200, SERIAL_8N1, VE_DIRECT_PIN_2, -1, true);
       vTaskDelay(10 / portTICK_PERIOD_MS);
-      GET_MPPT = readVEdirectMPPT();
+      readVEdirectMPPT();
       vTaskDelay(10 / portTICK_PERIOD_MS);
       SerialVE.end();
     }
 
-    handleGPS();
+    readGPS();
     readTemperatureSensors();
+    readTankLevelSensor();
 }

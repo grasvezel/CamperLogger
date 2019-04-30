@@ -30,12 +30,11 @@ void fileSystemCheck();
 void addLog();
 void WifiAPconfig();
 void handleCharging();
-String readVEdirectMPPT();
 
 String getFileChecksum( String );
 
-static float version              = 1.25;
-static String verstr              = "Version 1.25"; // Make sure we can grep version from binary image
+static float version              = 1.27;
+static String verstr              = "Version 1.27"; // Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -149,13 +148,6 @@ bool readings_paused = 0;
 bool BMV_present = 0;
 bool MPPT_present = 0;
 bool GPS_present = 0;
-
-// Strings containing GET vars (this is a temporary solution)
-String GET_temp = "";
-String GET_BMV  = "";
-String GET_MPPT = "";
-String GET_GPS  = "";
-String GET_tank = "";
 
 // toggle different data sources. Do we need this?
 bool read_ve_direct_bmv  = 1;    // read BMV or skip it?

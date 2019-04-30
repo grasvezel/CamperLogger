@@ -39,6 +39,7 @@ void uploadData() {
     request += "&GPSspeed="   + String(readings.GPS_speed);
     request += "&GPSheading=" + String(readings.GPS_heading);    
     request += "&GPSfix="     + String(readings.GPS_fix);
+    request += "&GPS_geohash="     + String(readings.GPS_geohash);
   }
   String response = httpsGet("/update/", request);
   addLog(LOG_LEVEL_DEBUG, "DATA : Response from server: " + response);

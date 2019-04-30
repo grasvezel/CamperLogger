@@ -1,6 +1,5 @@
-String handleGPS() {
+void readGPS() {
   String sentence = getGPSsentence();
-  String data = "";
   int pointer;
   String GPSspeedkt;
   float  deg;
@@ -16,7 +15,7 @@ String handleGPS() {
     readings.GPS_lon = "";
     readings.GPS_speed = "";
     readings.GPS_heading = "";
-    return "&GPSfix=timeout";
+    return;
   }
 
   // sentence type
@@ -82,28 +81,11 @@ String handleGPS() {
   readings.GPS_date = sentence.substring(0, pointer);
   sentence = sentence.substring(pointer + 1);
 
-  // Done decoding the sentence. 
+  // Done decoding the sentence.
   GPS_present = 1;
 
   // Now take lat_abs and lon_abs and generate the geohash
   readings.GPS_geohash = geohash(lat_abs, lon_abs);
-
-  if (readings.GPS_fix == "A") {
-    // fix is good, return data
-    data  = "&GPSdate=" + readings.GPS_date;
-    data += "&GPStime=" + readings.GPS_time;
-    data += "&GPSlat=" + readings.GPS_lat;
-    data += "&GPSlon=" + readings.GPS_lon;
-    data += "&GPSspeed=" + readings.GPS_speed;
-    data += "&GPSheading=" + readings.GPS_heading;
-    data += "&Geohash=" + readings.GPS_geohash;
-    data += "&GPSfix=A";
-    GPS_present = 1;
-    return data;
-  } else {
-    // no good fix, don't return data
-    return "&GPSfix=void";
-  }
 }
 
 String getGPSsentence() {
@@ -130,13 +112,13 @@ String getGPSsentence() {
   return "";
 }
 
-String geohash (float lng, float lat) {
+String geohash (float lat, float lng) {
   // I borrowed this code from Dennis Geurts (github.com/dennisg). Thanks, Dennis.
 
   char base32[] = "0123456789bcdefghjkmnpqrstuvwxyz";
   byte precision = GEOHASH_PRECISION;
   char hash[precision + 1];
-  
+
   uint32_t LatitudeBinary  = ((lat  +  90.0) * 0xFFFFFFFF / 180.0);
   uint32_t LongitudeBinary = ((lng  + 180.0) * 0xFFFFFFFF / 360.0);
 

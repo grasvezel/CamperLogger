@@ -1,4 +1,4 @@
-String readTankLevelSensor() {
+void readTankLevelSensor() {
   int loops = 10;
   int currenttanklevel = 0;
   
@@ -55,5 +55,5 @@ String readTankLevelSensor() {
   if(currenttanklevel > 684) {
      readings.Tank_level = 100;
   }
-  return("&Tnk=" + String(readings.Tank_level));
+  return;
 }

@@ -1,7 +1,7 @@
-// Bepaal of de 12V accu's opgeladen moeten worden.
-// Dat zou moeten als de 12V accu te leeg begint te raken
-// maar dat kunnen we (nog) niet meten.
-// Dus dan maar als we 24v 'over' hebben.
+// Determine if 12v battery should be charged
+// The charger is switched on by relay 1 if the main battery voltage (as
+// measured by the BMV) rises above chargeOnAt and off again if the voltage
+// drops below chargeOffAt. suggested values are 27.40 and 26.40 respectively.
 
 float chargeOnAt  = 27.40;
 float chargeOffAt = 26.40;
