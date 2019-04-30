@@ -3,15 +3,15 @@ void readVEdirectBMV() {
   char character;
   char prev_character;
   String line = "";
-  // The BMV sends *half* a telegram every second, so we need
+  // The BMV sends *half* a block every second, so we need
   // twice the timeout compared to the MPPT.
   unsigned long vedirect_timeout = millis() + 4000L;
 
-  // Try to find the beginning of the telegram.
+  // Try to find the beginning of the block.
   while (SerialVE.available() > 0 && !timeOutReached(vedirect_timeout)) {
     character = SerialVE.read();
     if(character == '\n' && prev_character == '\n') {
-      Serial.println("Begin telegram");
+      Serial.println("Begin block");
       break;
     }
     prev_character = character;
@@ -71,13 +71,13 @@ void readVEdirectBMV() {
     digitalWrite(PIN_EXT_LED, LOW);
   }
   if(valuesread == 7) {
-    lastTelegramBMV  = "Accuspanning      : " + String(readings.BMV_Vbatt) + "V\n";
-    lastTelegramBMV += "Middenspanning    : " + String(readings.BMV_Vaux) + "V\n";
-    lastTelegramBMV += "Laadstatus (SOC)  : " + String(readings.BMV_SOC) + "%\n";
-    lastTelegramBMV += "Laadstroom        : " + String(readings.BMV_Ibatt) + "A\n";
-    lastTelegramBMV += "Laadvermogen      : " + String(readings.BMV_Pcharge) + "W\n";
-    lastTelegramBMV += "Time to Go        : " + String(readings.BMV_TTG) + "\n";
-    lastTelegramBMV += "Laatste ontlading : " + String(readings.BMV_LDD) + "Ah\n";
+    lastBlockBMV  = "Accuspanning      : " + String(readings.BMV_Vbatt) + "V\n";
+    lastBlockBMV += "Middenspanning    : " + String(readings.BMV_Vaux) + "V\n";
+    lastBlockBMV += "Laadstatus (SOC)  : " + String(readings.BMV_SOC) + "%\n";
+    lastBlockBMV += "Laadstroom        : " + String(readings.BMV_Ibatt) + "A\n";
+    lastBlockBMV += "Laadvermogen      : " + String(readings.BMV_Pcharge) + "W\n";
+    lastBlockBMV += "Time to Go        : " + String(readings.BMV_TTG) + "\n";
+    lastBlockBMV += "Laatste ontlading : " + String(readings.BMV_LDD) + "Ah\n";
     BMV_present = 1;
     return;
   } else {

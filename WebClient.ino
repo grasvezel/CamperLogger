@@ -123,7 +123,7 @@ String httpsGet(String path, String query) {
   String response = "";
   String responseCode = "";
   char* server = DEFAULT_LOG_HOST;
-  query = "id=" + String(chipMAC) + "&" + query;
+  query = "id=" + String(chipMAC) + query;
   String url = "https://" + String(server) + path + "?" + query;
   if (!webclient.connect(server, port))
     addLog(LOG_LEVEL_INFO, "WEBCL: Connection to " + String(server) + " failed!");
@@ -211,5 +211,28 @@ String httpGet(String path, String query) {
   } else {
     addLog(LOG_LEVEL_ERROR, "WEBCL: Response code: " + String(responseCode));
     return responseCode;
+  }
+}
+
+
+void uploadFile(String content) {
+  String url = "/api/upload/?id=" + String(chipMAC); ;
+  char* server = DEFAULT_LOG_HOST;
+  char bitbucket;
+  WiFiClientSecure uploadclient;
+  int port = 443;
+  if (uploadclient.connect(server, port)) {
+    // Log to console only, the logfile is opened!
+    uint32_t fileSize = content.length();
+    uploadclient.println("POST " + url + " HTTP/1.1");
+    uploadclient.println("Host: " + String(server));
+    uploadclient.println("Connection: close");
+    uploadclient.println("Content-type: text/plain");
+    uploadclient.println("Content-length: " + String(fileSize));
+    uploadclient.println();
+
+    // send file contents to webserver
+    uploadclient.print(content);
+    uploadclient.stop();
   }
 }

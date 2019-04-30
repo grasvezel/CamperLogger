@@ -1,6 +1,10 @@
 void runBackgroundTasks() {
     // These tasks will run in the background on CPU0
 
+    // In case something goes wrong, this buys us time to download a new image.
+    if(!MPPT_present) {
+      vTaskDelay(30000 / portTICK_PERIOD_MS);
+    }
     // Read Victron BMV battary monitor
     if(read_ve_direct_bmv) {
       SerialVE.begin(19200, SERIAL_8N1, VE_DIRECT_PIN_1, -1, true);
@@ -24,4 +28,5 @@ void runBackgroundTasks() {
     readGPS();
     readTemperatureSensors();
     readTankLevelSensor();
+    
 }

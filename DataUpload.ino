@@ -10,7 +10,7 @@ void uploadData() {
   
   request += "&Tnk=" + String(readings.Tank_level);
   
-  if(BMV_present) {
+  if(BMV_present) { // checksum validation yet to be implemented
     request += "&Ub="  + String(readings.BMV_Vbatt);
     request += "&Um="  + String(readings.BMV_Vaux);
     request += "&Ib="  + String(readings.BMV_Ibatt);
@@ -20,7 +20,7 @@ void uploadData() {
     request += "&LDD=" + String(readings.BMV_LDD);
     request += "&CHG=" + String(readings.Charger);
   }
-  if(MPPT_present) {
+  if(readings.MPPT_ok) {
     request += "&MUb="    + String(readings.MPPT_Vbatt);
     request += "&MIb="    + String(readings.MPPT_Ibatt);
     request += "&MUpv="   + String(readings.MPPT_Vpv);
@@ -41,6 +41,10 @@ void uploadData() {
     request += "&GPSfix="     + String(readings.GPS_fix);
     request += "&GPS_geohash="     + String(readings.GPS_geohash);
   }
+
   String response = httpsGet("/update/", request);
+
+  // uploadFile(lastBlockMPPT);
+  
   addLog(LOG_LEVEL_DEBUG, "DATA : Response from server: " + response);
 }

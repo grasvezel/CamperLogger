@@ -33,8 +33,8 @@ void handleCharging();
 
 String getFileChecksum( String );
 
-static float version              = 1.27;
-static String verstr              = "Version 1.27"; // Make sure we can grep version from binary image
+static float version              = 1.52;
+static String verstr              = "Version 1.52"; // Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -45,8 +45,6 @@ byte logLevel                     = 4;                // not a #define, logLevel
 
 #define FILE_SECURITY               "/security.dat"   // WiFi settings
 #define FILE_SETTINGS               "/settings.dat"   // user settings
-#define FILE_LOG                    "/log.txt"        // system log file
-#define LOG_TO_FILE                 1
 
 // TIME SETTINGS
 // DST setting is stored in settings struct and is updated from the server
@@ -114,6 +112,7 @@ struct readingsStruct {
   float MPPT_Ibatt;  // MPPT output current (A)   I
   float MPPT_Vpv;    // MPPT input voltage (V)    VPV
   int   MPPT_Ppv;    // MPPT input power (W)      PPV
+  bool  MPPT_ok;     // MPPT checksum on last block OK
   
   // GPS readings
   String GPS_fix;    // GPS status (active/timeout/void)
@@ -133,8 +132,8 @@ struct readingsStruct {
 } readings;
 
 // DATA COLLECTION VARIABLES
-String lastTelegramBMV = "";
-String lastTelegramMPPT = "";
+String lastBlockBMV = "";
+String lastBlockMPPT = "";
 
 // Since we are going to multitask, we want to avoid posting
 // data to the server while the values are being read.

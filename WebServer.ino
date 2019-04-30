@@ -4,7 +4,7 @@ void WebServerInit() {
   // Prepare webserver pages
   WebServer.on("/", handle_root);
   WebServer.on("/status", handle_status);
-  WebServer.on("/mppttelegram", handle_mppt_telegram);
+  WebServer.on("/mppt", handle_mppt);
   WebServer.on("/cfg", handle_wificonfig);
   WebServer.on("/savecfg", handle_saveconfig);
 
@@ -73,7 +73,7 @@ void handle_root() {
     content = readFile("/head.html");
     content += "Laatste meetwaarden:\n";
     content += "<pre>\n";
-    content += lastTelegramBMV;
+    content += lastBlockBMV;
     content += "</pre>";
     WebServer.send(200, "text/html", content);
     if(timerAPoff != 0)
@@ -85,15 +85,15 @@ void handle_root() {
   statusLED(false);
 }
 
-void handle_mppt_telegram() {
+void handle_mppt() {
   statusLED(true);
-  addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /mppttelegram"));
+  addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /mppt"));
   if(WiFi.status() == WL_CONNECTED) {
     String content;
     content = readFile("/head.html");
-    content += "Laatste MPPT telegram:\n";
+    content += "Laatste MPPT block:\n";
     content += "<pre>\n";
-    content += lastTelegramMPPT;
+    content += lastBlockMPPT;
     content += "</pre>";
     WebServer.send(200, "text/html", content);
     if(timerAPoff != 0)
