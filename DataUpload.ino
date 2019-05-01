@@ -43,8 +43,6 @@ void uploadData() {
   }
 
   String response = httpsGet("/update/", request);
-
-  // uploadFile(lastBlockMPPT);
   
   addLog(LOG_LEVEL_DEBUG, "DATA : Response from server: " + response);
 }

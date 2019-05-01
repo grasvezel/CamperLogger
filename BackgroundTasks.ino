@@ -8,9 +8,13 @@ void runBackgroundTasks() {
     // Read Victron BMV battary monitor
     if(read_ve_direct_bmv) {
       SerialVE.begin(19200, SERIAL_8N1, VE_DIRECT_PIN_1, -1, true);
+
       vTaskDelay(10 / portTICK_PERIOD_MS);
-      readVEdirectBMV();
+      readVEdirect(DEVICE_BMV_B1);
+
       vTaskDelay(10 / portTICK_PERIOD_MS);
+      readVEdirect(DEVICE_BMV_B2);
+
       SerialVE.end();
       handleCharging();
       vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -19,14 +23,22 @@ void runBackgroundTasks() {
     // Read Victron MPPT charge controller
     if(read_ve_direct_mppt) {
       SerialVE.begin(19200, SERIAL_8N1, VE_DIRECT_PIN_2, -1, true);
+
       vTaskDelay(10 / portTICK_PERIOD_MS);
-      readVEdirectMPPT();
+      readVEdirect(DEVICE_MPPT);
+
       vTaskDelay(10 / portTICK_PERIOD_MS);
       SerialVE.end();
     }
 
+    vTaskDelay(10 / portTICK_PERIOD_MS);
     readGPS();
+
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+
     readTemperatureSensors();
+
+    vTaskDelay(10 / portTICK_PERIOD_MS);
     readTankLevelSensor();
     
 }

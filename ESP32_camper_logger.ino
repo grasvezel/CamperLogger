@@ -33,8 +33,8 @@ void handleCharging();
 
 String getFileChecksum( String );
 
-static float version              = 1.52;
-static String verstr              = "Version 1.52"; // Make sure we can grep version from binary image
+static float version              = 1.66;
+static String verstr              = "Version 1.66";   //Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -73,6 +73,10 @@ byte logLevel                     = 4;                // not a #define, logLevel
 #define VE_DIRECT_PIN_2             36                // opto isolated input (RS-232 TTL)
 #define TANK_LEVEL_SENSOR_PIN       33                // Analog tank level sensor input
 
+#define DEVICE_BMV_B1               1                 // Block one of the BMV output
+#define DEVICE_BMV_B2               2                 // Block two of the BMV output
+#define DEVICE_MPPT                 3                 // MPPT output has only one block
+
 TaskHandle_t BackgroundTask;
 
 struct SecurityStruct {
@@ -101,7 +105,9 @@ struct readingsStruct {
   int   BMV_Pcharge; // BMV charge power (W)
   int   BMV_TTG;     // BMV Time To Go (minutes)
   float BMV_LDD;     // BMV Last Discharge Depth (Ah)
-  
+  bool  BMV_B1_ok;   // BMV checksum on block one OK
+  bool  BMV_B2_ok;   // BMV checksum on block two OK
+
   // MPPT vars
   float MPPT_ytot;   // MPPT yield total (kWh)    H19
   float MPPT_yday;   // MPPT yield today (kWh)    H20
@@ -113,7 +119,7 @@ struct readingsStruct {
   float MPPT_Vpv;    // MPPT input voltage (V)    VPV
   int   MPPT_Ppv;    // MPPT input power (W)      PPV
   bool  MPPT_ok;     // MPPT checksum on last block OK
-  
+
   // GPS readings
   String GPS_fix;    // GPS status (active/timeout/void)
   String GPS_date;   // GPS date DDMMYY
