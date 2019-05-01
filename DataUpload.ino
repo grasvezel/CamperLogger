@@ -43,6 +43,11 @@ void uploadData() {
   }
 
   String response = httpsGet("/update/", request);
-  
   addLog(LOG_LEVEL_DEBUG, "DATA : Response from server: " + response);
+
+  if(inventory_requested && inventory_complete) {
+    uploadFile(inventory, "inventory");
+    inventory_complete = 0;
+    inventory_requested = 0;
+  }
 }

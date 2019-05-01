@@ -33,8 +33,8 @@ void handleCharging();
 
 String getFileChecksum( String );
 
-static float version              = 1.66;
-static String verstr              = "Version 1.66";   //Make sure we can grep version from binary image
+static float version              = 1.73;
+static String verstr              = "Version 1.73";   //Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -98,27 +98,31 @@ struct readingsStruct {
   float temp[10];   // max 10 temperature sensors (deg C)
   
   // BMV vars
-  float BMV_Vbatt;   // BMV battery voltage (V)
-  float BMV_Vaux;    // BMV auxilary voltage (V)
-  float BMV_SOC;     // BMV State Of Charge (%)
-  float BMV_Ibatt ;  // BMV battery current (A)
-  int   BMV_Pcharge; // BMV charge power (W)
-  int   BMV_TTG;     // BMV Time To Go (minutes)
-  float BMV_LDD;     // BMV Last Discharge Depth (Ah)
-  bool  BMV_B1_ok;   // BMV checksum on block one OK
-  bool  BMV_B2_ok;   // BMV checksum on block two OK
+  float  BMV_Vbatt;   // BMV battery voltage (V)
+  float  BMV_Vaux;    // BMV auxilary voltage (V)
+  float  BMV_SOC;     // BMV State Of Charge (%)
+  float  BMV_Ibatt ;  // BMV battery current (A)
+  int    BMV_Pcharge; // BMV charge power (W)
+  int    BMV_TTG;     // BMV Time To Go (minutes)
+  float  BMV_LDD;     // BMV Last Discharge Depth (Ah)
+  bool   BMV_B1_ok;   // BMV checksum on block one OK
+  bool   BMV_B2_ok;   // BMV checksum on block two OK
+  String BMV_PID;     // BMV Product ID
+  String BMV_serial;  // BMV serial number
 
   // MPPT vars
-  float MPPT_ytot;   // MPPT yield total (kWh)    H19
-  float MPPT_yday;   // MPPT yield today (kWh)    H20
-  int   MPPT_Pmax;   // MPPT max power today (W)  H21
-  int   MPPT_err;    // MPPT error number         ERR
-  int   MPPT_state;  // MPPT state                CS
-  float MPPT_Vbatt;  // MPPT output voltage (V)   V
-  float MPPT_Ibatt;  // MPPT output current (A)   I
-  float MPPT_Vpv;    // MPPT input voltage (V)    VPV
-  int   MPPT_Ppv;    // MPPT input power (W)      PPV
-  bool  MPPT_ok;     // MPPT checksum on last block OK
+  float  MPPT_ytot;   // MPPT yield total (kWh)    H19
+  float  MPPT_yday;   // MPPT yield today (kWh)    H20
+  int    MPPT_Pmax;   // MPPT max power today (W)  H21
+  int    MPPT_err;    // MPPT error number         ERR
+  int    MPPT_state;  // MPPT state                CS
+  float  MPPT_Vbatt;  // MPPT output voltage (V)   V
+  float  MPPT_Ibatt;  // MPPT output current (A)   I
+  float  MPPT_Vpv;    // MPPT input voltage (V)    VPV
+  int    MPPT_Ppv;    // MPPT input power (W)      PPV
+  bool   MPPT_ok;     // MPPT checksum on last block OK
+  String MPPT_PID;    // MPPT Product ID
+  String MPPT_serial; // MPPT serial number
 
   // GPS readings
   String GPS_fix;    // GPS status (active/timeout/void)
@@ -140,6 +144,10 @@ struct readingsStruct {
 // DATA COLLECTION VARIABLES
 String lastBlockBMV = "";
 String lastBlockMPPT = "";
+String inventory = "";
+bool   inventory_complete = 0;
+int    nr_of_temp_sensors = 0;
+bool   inventory_requested = 0;
 
 // Since we are going to multitask, we want to avoid posting
 // data to the server while the values are being read.
@@ -247,7 +255,8 @@ void setup() {
   WebServerInit();
   
   // get the CRC of the current html file on SPIFFS
-  Fcrc = getFileChecksum("/head.html");
+  // disabled due to mysterious freezes
+  //Fcrc = getFileChecksum("/head.html");
 
   callHome();  // get settings and current software version from server
   addLog(LOG_LEVEL_INFO, "CORE : Setup done. Starting main loop");

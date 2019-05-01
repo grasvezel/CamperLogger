@@ -194,6 +194,7 @@ void writeFile(fs::FS &fs, const char * path, String message) {
 }
 
 void updateHTML(void) {
+  return;
   String Scrc = httpsGet("/api/html/checksum/", "");
   if (Scrc.length() != 4) {
     addLog(LOG_LEVEL_ERROR, "FILE: Invalid checksum from server!");

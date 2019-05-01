@@ -19,9 +19,9 @@ void callHome() {
       addLog(LOG_LEVEL_INFO, "CORE : Reboot request from server, rebooting");
       ESP.restart();
     }
-    if (returnValue.equalsIgnoreCase("log")) {
-      addLog(LOG_LEVEL_INFO, "CORE : Upload log request from server");
-      // logging to SD not implemented
+    if (returnValue.equalsIgnoreCase("inventory")) {
+      addLog(LOG_LEVEL_INFO, "CORE : Inventory request from server");
+      inventory_requested = 1;
     }
   }
 
@@ -215,8 +215,8 @@ String httpGet(String path, String query) {
 }
 
 
-void uploadFile(String content) {
-  String url = "/api/upload/?id=" + String(chipMAC); ;
+void uploadFile(String content, String type) {
+  String url = "/api/upload/?id=" + String(chipMAC) + "&file=" + type;
   char* server = DEFAULT_LOG_HOST;
   char bitbucket;
   WiFiClientSecure uploadclient;
