@@ -24,7 +24,8 @@ void uploadInfluxData() {
   }
 
   if(GPS_present) {
-    influx_post("Geohash", String(readings.GPS_geohash));
+    // strings must be quoted
+    influx_post("Geohash", "\"" + String(readings.GPS_geohash) + "\"", "geo");
   }
   influx_post("Tank", String(readings.Tank_level));
 

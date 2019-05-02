@@ -54,8 +54,8 @@ struct SettingsStruct {
 
 String getFileChecksum( String );
 
-static float version              = 1.77;
-static String verstr              = "Version 1.77";   //Make sure we can grep version from binary image
+static float version              = 1.79;
+static String verstr              = "Version 1.79";   //Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -201,6 +201,7 @@ unsigned long nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
 // prototypes with default ports for http and https
 String httpsGet(String path, String query, int port=443);
 String httpGet(String path, String query, int port=80);
+void influx_post(String var, String value, String field="value");
 
 OneWire oneWire(ONEWIRE_PIN);
 
