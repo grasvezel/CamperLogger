@@ -54,8 +54,8 @@ struct SettingsStruct {
 
 String getFileChecksum( String );
 
-static float version              = 1.76;
-static String verstr              = "Version 1.76";   //Make sure we can grep version from binary image
+static float version              = 1.77;
+static String verstr              = "Version 1.77";   //Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2

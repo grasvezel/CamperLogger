@@ -24,7 +24,7 @@ void uploadInfluxData() {
   }
 
   if(GPS_present) {
-    influx_post("Tank", String(readings.GPS_geohash));
+    influx_post("Geohash", String(readings.GPS_geohash));
   }
   influx_post("Tank", String(readings.Tank_level));
 
