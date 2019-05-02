@@ -40,13 +40,12 @@ void ResetFactory(void) {
     return;
   }
 
-  // Skip this part. We don't have a config file (yet?)
-  //  File f = SPIFFS.open(FILE_SETTINGS, "w");
-  //  if (f){
-  //    for (int x = 0; x < 32768; x++)
-  //      f.write(0);
-  //    f.close();
-  //  }
+  File settings = SPIFFS.open(FILE_SETTINGS, "w");
+  if (settings){
+    for (int x = 0; x < 4096; x++)
+      settings.write(0);
+    settings.close();
+  }
 
   File f = SPIFFS.open(FILE_SECURITY, "w");
   if (f) {

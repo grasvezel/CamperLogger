@@ -36,14 +36,30 @@
 
 struct SettingsStruct {
   byte          DST;
-  bool          upload_get      = 1;
-  bool          upload_influx   = 1;
-  String        influx_host     = "bus.tarthorst.net";
-  int           influx_port     = 8086;
-  String        influx_db       = "test";
-  String        influx_mn       = "camper";                      // the name of the measurement
-  String        influx_user     = "testuser";
-  String        influx_pass     = "testpass";
+  
+  bool          upload_get                  = 1;
+  String        upload_get_url              = "https://bus.tarthorst.net";
+  int           upload_get_port             = 443;
+
+  bool          upload_influx               = 1;
+  String        influx_host                 = "bus.tarthorst.net";
+  int           influx_port                 = 8086;
+  String        influx_db                   = "test";
+  String        influx_mn                   = "camper";          // the name of the measurement
+  String        influx_user                 = "testuser";
+  String        influx_pass                 = "testpass";
+
+  bool          influx_write_bmv            = 1;
+  bool          influx_write_mppt           = 1;
+  bool          influx_write_temp           = 1;
+  bool          influx_write_tank           = 1;
+  bool          influx_write_geohash        = 1;
+  bool          influx_write_coords         = 1;
+  bool          influx_write_speed_heading  = 1;
+
+  int           gps_upload_interval         = 60;               // seconds
+  int           readings_upload_interval    = 60;               // seconds
+
 } Settings;
 
 
@@ -249,7 +265,7 @@ void setup() {
   SerialGPS.begin(9600, SERIAL_7E1, GPS_PIN, -1, false);
 
   addLog(LOG_LEVEL_INFO, "CORE : Version " + String(version) + " starting");
-
+  addLog(LOG_LEVEL_DEBUG, "CORE : Size of stettins struct: " + String(sizeof(struct SettingsStruct)));
   for (byte x = 0; x < 16; x++)
     ledChannelPin[x] = -1;
 
