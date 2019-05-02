@@ -109,12 +109,11 @@ String urlOpen(String path, String query) {
   }
 }
 
-String httpsGet(String path, String query) {
+String httpsGet(String path, String query, int port) {
   if (WiFi.status() != WL_CONNECTED) {
     addLog(LOG_LEVEL_ERROR, "WEBCL: Unable to connect: Not connected to WiFi");
   }
   WiFiClientSecure webclient;
-  int port = 443;
   addLog(LOG_LEVEL_DEBUG, "WEBCL: Starting https request (" + path + ")" );
   unsigned int contentLength = 0;
   unsigned int contentPos = 0;
@@ -161,12 +160,11 @@ String httpsGet(String path, String query) {
   }
 }
 
-String httpGet(String path, String query) {
+String httpGet(String path, String query, int port) {
   if (WiFi.status() != WL_CONNECTED) {
     addLog(LOG_LEVEL_ERROR, "WEBCL: Unable to connect: Not connected to WiFi");
   }
   WiFiClient webclient;
-  int port = 80;
   addLog(LOG_LEVEL_DEBUG, "WEBCL: Starting https request (" + path + ")" );
   unsigned int contentLength = 0;
   unsigned int contentPos = 0;
@@ -212,7 +210,6 @@ String httpGet(String path, String query) {
   }
 }
 
-
 void uploadFile(String content, String type) {
   String url = "/api/upload/?id=" + String(chipMAC) + "&file=" + type;
   char* server = DEFAULT_LOG_HOST;
@@ -233,4 +230,21 @@ void uploadFile(String content, String type) {
     uploadclient.print(content);
     uploadclient.stop();
   }
+}
+
+void influx_post(String var, String value) {
+  String postVars = Settings.influx_mn + ",item=" + var + ",logger=" + String(chipMAC) + " value=" + value;
+
+  WiFiClient client;
+  if(!client.connect(Settings.influx_host.c_str(), Settings.influx_port)) {
+    return;
+  }
+  client.println("POST /write?db=" + Settings.influx_db + " HTTP/1.1");
+  client.println("Host: " + String(Settings.influx_host));
+  client.println("Authorization: Basic " + base64::encode(Settings.influx_user + ":" + Settings.influx_pass));
+  client.println("Connection: close");
+  client.println("Content-length: " + String(postVars.length()));
+  client.println();
+  client.println(postVars);
+  client.stop();
 }

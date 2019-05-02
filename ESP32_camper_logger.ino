@@ -25,16 +25,37 @@
 #include <Update.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <base64.h>
 
-void fileSystemCheck();
-void addLog();
-void WifiAPconfig();
-void handleCharging();
+//------------------------------------------------------------------------------
+// Settings
+// The idea is that this struct is going to be saved on SPIFFS in the future.
+// Maybe configurable through the web interface. In any case credentials should
+// not be in the code. This is a tepmorary solution
+//------------------------------------------------------------------------------
+
+struct SettingsStruct {
+  byte          DST;
+  bool          upload_get      = 1;
+  bool          upload_influx   = 1;
+  String        influx_host     = "bus.tarthorst.net";
+  int           influx_port     = 8086;
+  String        influx_db       = "test";
+  String        influx_mn       = "camper";                      // the name of the measurement
+  String        influx_user     = "testuser";
+  String        influx_pass     = "testpass";
+} Settings;
+
+
+//void fileSystemCheck();
+//void addLog();
+//void WifiAPconfig();
+//void handleCharging();
 
 String getFileChecksum( String );
 
-static float version              = 1.73;
-static String verstr              = "Version 1.73";   //Make sure we can grep version from binary image
+static float version              = 1.76;
+static String verstr              = "Version 1.76";   //Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -88,10 +109,6 @@ struct SecurityStruct {
   char          Password[26];
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 } SecuritySettings;
-
-struct SettingsStruct {
-  byte          DST;
-} Settings;
 
 struct readingsStruct {
   // Temperature sensors
@@ -181,7 +198,9 @@ unsigned long timerAPoff    = millis() + 10000L;
 unsigned long timerLog      = millis() + LOG_INTERVAL * 1000L;
 unsigned long nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
 
-// please set temperature sensor addresses in TemperatureSenors.ino
+// prototypes with default ports for http and https
+String httpsGet(String path, String query, int port=443);
+String httpGet(String path, String query, int port=80);
 
 OneWire oneWire(ONEWIRE_PIN);
 
@@ -281,6 +300,7 @@ void loop() {
 
     callHome();
     uploadGetData();
+    uploadInfluxData();
     digitalWrite(PIN_EXT_LED, LOW);
   }
 }
