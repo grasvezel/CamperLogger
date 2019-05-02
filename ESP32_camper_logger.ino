@@ -253,10 +253,6 @@ void setup() {
   }
   delay(100);
   WebServerInit();
-  
-  // get the CRC of the current html file on SPIFFS
-  // disabled due to mysterious freezes
-  //Fcrc = getFileChecksum("/head.html");
 
   callHome();  // get settings and current software version from server
   addLog(LOG_LEVEL_INFO, "CORE : Setup done. Starting main loop");
@@ -284,7 +280,7 @@ void loop() {
     }
 
     callHome();
-    uploadData();
+    uploadGetData();
     digitalWrite(PIN_EXT_LED, LOW);
   }
 }

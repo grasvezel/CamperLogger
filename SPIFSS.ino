@@ -79,43 +79,6 @@ String readFile(String filename) {
   return (content);
 }
 
-String getFileChecksum(String filename) {
-  addLog(LOG_LEVEL_DEBUG, F("FS   : Opening /head.html. If nothing happens after this line, wipe flash using esptool erase_flash."));
-  fs::File filehandle = SPIFFS.open(filename, "r+");
-  uint16_t crc = 0xFFFF;
-  String crc_string;
-  if (filehandle) {
-    while (filehandle.available()) {
-      crc ^= (uint16_t)filehandle.read();  // XOR byte into least sig. byte of crc
-      for (int i = 8; i != 0; i--) {    // Loop over each bit
-        if ((crc & 0x0001) != 0) {      // If the LSB is set
-          crc >>= 1;                    // Shift right and XOR 0xA001
-          crc ^= 0xA001;
-        } else {                           // Else LSB is not set
-          crc >>= 1;                    // Just shift right
-        }
-      }
-    }
-    filehandle.close();
-    crc_string = String(crc, HEX);
-    crc_string.toUpperCase();
-
-    //The crc should be like XXYY. Add zeros if need it
-    if (crc_string.length() == 1) {
-      crc_string = "000" + crc_string;
-    } else if (crc_string.length() == 2) {
-      crc_string = "00" + crc_string;
-    } else if (crc_string.length() == 3) {
-      crc_string = "0" + crc_string;
-    }
-
-    //Invert the byte positions
-    crc_string = crc_string.substring(2, 4) + crc_string.substring(0, 2);
-    return crc_string;
-  }
-}
-
-
 /********************************************************************************************\
   Save settings to SPIFFS
   \*********************************************************************************************/
@@ -190,31 +153,5 @@ void writeFile(fs::FS &fs, const char * path, String message) {
   }
   if (file.print(message)) {
   } else {
-  }
-}
-
-void updateHTML(void) {
-  return;
-  String Scrc = httpsGet("/api/html/checksum/", "");
-  if (Scrc.length() != 4) {
-    addLog(LOG_LEVEL_ERROR, "FILE: Invalid checksum from server!");
-    return;
-  }
-  //  String Fcrc = getFileChecksum("/head.html");
-  addLog(LOG_LEVEL_DEBUG, "FILE : HTML file checksums: " + Fcrc + " (flash), " + Scrc + " (server)");
-
-  if (Fcrc != Scrc) {
-    String htmlOnServer = httpsGet("/api/html/datalogger-head.html", "");
-    addLog(LOG_LEVEL_INFO, "FILE : Updating HTML on flash");
-    File file = SPIFFS.open("/head.html", FILE_WRITE);
-    if(!file) {
-      addLog(LOG_LEVEL_ERROR, "FILE : Error opening head.html for writing");
-    }
-    if(file.print(htmlOnServer)) {
-      addLog(LOG_LEVEL_INFO, "FILE : HTML file written to SPIFFS");
-    } else {
-      addLog(LOG_LEVEL_ERROR, "FILE : Error writing HTML file to SPIFFS");
-    }
-    Fcrc = Scrc; // update CRC without calculating it.
   }
 }

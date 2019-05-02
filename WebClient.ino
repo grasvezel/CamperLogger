@@ -5,8 +5,6 @@ void callHome() {
   }
   addLog(LOG_LEVEL_INFO, "WEBCL: Calling home");
   
-  updateHTML();
-
   String cfgData = httpsGet("/api/callhome/", "&ver=" + String(version) + "&uptime=" + String(millis() / 1000) + "&free=" + String(system_get_free_heap_size()) + "&rssi=" + getWiFiStrength(10) + "&ip=" + formatIP(WiFi.localIP()));
   String returnValue;
   bool settingsChanged = 0;

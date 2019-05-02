@@ -1,4 +1,8 @@
-void uploadData() {
+void uploadInfluxData() {
+  
+}
+
+void uploadGetData() {
   addLog(LOG_LEVEL_INFO, "DATA : Uploading readings to server");
 
   String request = "";

@@ -1,3 +1,5 @@
+String html_head = "<html><head><title>Camper Control</title><style>body {background-color: white; color: black;font-size: 40px;}td {font-size: 40px;}input[type=password], select, input[type=submit] {-webkit-appearance: none;-moz-appearance: none; display: block;margin: 0;width: 100%;height: 56px;line-height: 40px;font-size: 40px;border: 1px solid #bbb;}a, a.vsited {font-size: 15px;text-decoration: none;color: #ffffff;background-color: #005ca9;padding: 10px;display: inline-block;border: 1px solid black;border-radius: 10px;text-transform: uppercase;font-weight: bold;}pre {display: block;background-color: #f0f0f0;border: 1px solid black;font-size: 17px;}</style><meta name='apple-mobile-web-app-capable' content='yes'><meta name='viewport' content='user-scalable=no, initial-scale=.5 width=device-width'><meta charset='UTF-8'></head><body><p><a href='/'>Home</a><a href='/cfg'>WiFi instellingen</a><a href='/bmv'>BMV</a><a href='/mppt'>MPPT</a><a href='/sensors'>MPPT</a><hr>";
+
 void WebServerInit() {
   addLog(LOG_LEVEL_INFO, F("WEB  : Server initializing"));
   
@@ -15,7 +17,7 @@ void WebServerInit() {
 
 void handle_wificonfig() {
   String content;
-  content = (readFile("/head.html"));
+  content = html_head;
   addLog(LOG_LEVEL_INFO, "Scanning for networks...");
   delay(10);
   int n = WiFi.scanNetworks();
@@ -70,7 +72,7 @@ void handle_root() {
   addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /"));
   if(WiFi.status() == WL_CONNECTED) {
     String content;
-    content = readFile("/head.html");
+    content = html_head;
     content += "Laatste meetwaarden:\n";
     content += "<pre>\n";
     content += lastBlockBMV;
@@ -90,7 +92,7 @@ void handle_mppt() {
   addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /mppt"));
   if(WiFi.status() == WL_CONNECTED) {
     String content;
-    content = readFile("/head.html");
+    content = html_head;
     content += "Laatste MPPT block:\n";
     content += "<pre>\n";
     content += lastBlockMPPT;
@@ -109,7 +111,7 @@ void handle_status() {
   statusLED(true);
   addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /telegram"));
   String content;
-  content = readFile("/head.html");
+  content = html_head;
   content += "Verbonden met WiFi.<br>IP adres: ";
   content += formatIP(WiFi.localIP());
   content += "<br>Tijd: ";
