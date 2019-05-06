@@ -16,8 +16,9 @@ host (like a Raspberry Pi) if you don't. The logger itself does not store any da
 - Switch stuff on/off using relays (I use it to switch my 24V to 12V battery charger)
 - Over the air software updates (OTA)
 - Periodically upload this info to the server
-
 - Data upload is done over https
+- Supports logging directly to influxdb (no https support yet)
+- Configurable via webinterface
 
 If you are interested in the hardware design and/or the PCB, send me a message.
 
