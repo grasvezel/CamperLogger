@@ -68,6 +68,9 @@ void runBackgroundTasks() {
   if(nr_of_temp_sensors > 0) {
     inventory += "Number of 1-Wire temperature sensors: " + String(nr_of_temp_sensors) + "\n";
   }
+  if (inventory.length() == 0) {
+    inventory = "No devices detected";
+  }
   inventory_complete = 1;
 
 }

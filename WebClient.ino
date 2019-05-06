@@ -4,12 +4,16 @@ void callHome() {
     return;
   }
   addLog(LOG_LEVEL_INFO, "WEBCL: Calling home");
-  
-  String cfgData = httpsGet("/api/callhome/", "&ver=" + String(version) + "&uptime=" + String(millis() / 1000) + "&free=" + String(system_get_free_heap_size()) + "&rssi=" + getWiFiStrength(10) + "&ip=" + formatIP(WiFi.localIP()));
+  String cfgData;
+  if (Settings.upload_get_ssl) {
+    cfgData = httpsGet("/api/callhome/", "&ver=" + String(version) + "&uptime=" + String(millis() / 1000) + "&free=" + String(system_get_free_heap_size()) + "&rssi=" + getWiFiStrength(10) + "&ip=" + formatIP(WiFi.localIP()), Settings.upload_get_port);
+  } else {
+    cfgData = httpGet("/api/callhome/", "&ver=" + String(version) + "&uptime=" + String(millis() / 1000) + "&free=" + String(system_get_free_heap_size()) + "&rssi=" + getWiFiStrength(10) + "&ip=" + formatIP(WiFi.localIP()), Settings.upload_get_port);
+  }
   String returnValue;
   bool settingsChanged = 0;
   bool returnBool;
-  
+
   // Process commands from server
   returnValue = getVarFromString("Command:", cfgData);
   if (returnValue != "") {
@@ -29,23 +33,23 @@ void callHome() {
   // check DST
   bool WAS_DST = Settings.DST;
   returnValue = getVarFromString("DST:", cfgData);
-  if(returnValue == "1") {
+  if (returnValue == "1") {
     Settings.DST = 1;
-    if(WAS_DST == 0) {
+    if (WAS_DST == 0) {
       addLog(LOG_LEVEL_INFO, "WEBCL: Server reports it is DST, forwarding the clock 1 hour");
       setTime(sysTime + SECS_PER_HOUR);
       settingsChanged = 1;
     }
   } else {
     Settings.DST = 0;
-    if(WAS_DST == 1) {
+    if (WAS_DST == 1) {
       addLog(LOG_LEVEL_INFO, "WEBCL: Server reports it is not DST, reversing the clock 1 hour");
       setTime(sysTime - SECS_PER_HOUR);
       settingsChanged = 1;
     }
   }
 
-  if(settingsChanged) {
+  if (settingsChanged) {
     addLog(LOG_LEVEL_INFO, "FILE : Settings changed, saving new settings");
     SaveSettings();
   }
@@ -71,11 +75,6 @@ void callHome() {
       OTA();
     }
   }
-}
-
-void reportInventory() {
-  // in the future, we will report the inventory on startup.
-  return;
 }
 
 String getVarFromString(String var, String cfgData) {
@@ -111,7 +110,7 @@ String urlOpen(String path, String query) {
 
 String httpsGet(String path, String query, int port) {
   if (WiFi.status() != WL_CONNECTED) {
-    addLog(LOG_LEVEL_ERROR, "WEBCL: Unable to connect: Not connected to WiFi");
+    addLog(LOG_LEVEL_ERROR, "WEBCL: Not trying to connect: Not connected to WiFi");
   }
   WiFiClientSecure webclient;
   addLog(LOG_LEVEL_DEBUG, "WEBCL: Starting https request (" + path + ")" );
@@ -119,7 +118,7 @@ String httpsGet(String path, String query, int port) {
   unsigned int contentPos = 0;
   String response = "";
   String responseCode = "";
-  char* server = DEFAULT_LOG_HOST;
+  char* server = Settings.upload_get_host;
   query = "id=" + String(chipMAC) + query;
   String url = "https://" + String(server) + path + "?" + query;
   if (!webclient.connect(server, port))
@@ -162,7 +161,7 @@ String httpsGet(String path, String query, int port) {
 
 String httpGet(String path, String query, int port) {
   if (WiFi.status() != WL_CONNECTED) {
-    addLog(LOG_LEVEL_ERROR, "WEBCL: Unable to connect: Not connected to WiFi");
+    addLog(LOG_LEVEL_ERROR, "WEBCL: Not trying to connect: Not connected to WiFi");
   }
   WiFiClient webclient;
   addLog(LOG_LEVEL_DEBUG, "WEBCL: Starting https request (" + path + ")" );
@@ -170,7 +169,7 @@ String httpGet(String path, String query, int port) {
   unsigned int contentPos = 0;
   String response = "";
   String responseCode = "";
-  char* server = DEFAULT_LOG_HOST;
+  char* server = Settings.upload_get_host;
   query = "id=" + String(chipMAC) + "&" + query;
   String url = "http://" + String(server) + path + "?" + query;
   if (!webclient.connect(server, port))
@@ -212,11 +211,10 @@ String httpGet(String path, String query, int port) {
 
 void uploadFile(String content, String type) {
   String url = "/api/upload/?id=" + String(chipMAC) + "&file=" + type;
-  char* server = DEFAULT_LOG_HOST;
+  char* server = Settings.upload_get_host;
   char bitbucket;
   WiFiClientSecure uploadclient;
-  int port = 443;
-  if (uploadclient.connect(server, port)) {
+  if (uploadclient.connect(server, Settings.upload_get_port)) {
     // Log to console only, the logfile is opened!
     uint32_t fileSize = content.length();
     uploadclient.println("POST " + url + " HTTP/1.1");
@@ -233,15 +231,15 @@ void uploadFile(String content, String type) {
 }
 
 void influx_post(String var, String value, String field) {
-  String postVars = Settings.influx_mn + ",item=" + var + ",logger=" + String(chipMAC) + " " + field + "=" + value;
+  String postVars = String(Settings.influx_mn) + ",item=" + var + ",logger=" + String(chipMAC) + " " + field + "=" + value;
 
   WiFiClient client;
-  if(!client.connect(Settings.influx_host.c_str(), Settings.influx_port)) {
+  if (!client.connect(Settings.influx_host, Settings.influx_port)) {
     return;
   }
-  client.println("POST /write?db=" + Settings.influx_db + " HTTP/1.1");
+  client.println("POST /write?db=" + String(Settings.influx_db) + " HTTP/1.1");
   client.println("Host: " + String(Settings.influx_host));
-  client.println("Authorization: Basic " + base64::encode(Settings.influx_user + ":" + Settings.influx_pass));
+  client.println("Authorization: Basic " + base64::encode(String(Settings.influx_user) + ":" + String(Settings.influx_pass)));
   client.println("Connection: close");
   client.println("Content-length: " + String(postVars.length()));
   client.println();

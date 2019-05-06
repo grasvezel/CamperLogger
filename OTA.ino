@@ -1,15 +1,15 @@
 void OTA() {
-  if(WiFi.status() != WL_CONNECTED)
+  if (WiFi.status() != WL_CONNECTED)
     return;
 
-  char* server = DEFAULT_LOG_HOST;
+  char* server = Settings.upload_get_host;
   unsigned long timeoutOTA = millis() + 5000;
   String query;
   unsigned int contentLength = 0;
   int responseCode = 0;
   WiFiClient otaclient;
   int port = 80;
-      
+
   addLog(LOG_LEVEL_INFO, "OTA  : Starting OTA update");
   if (!otaclient.connect(server, port)) {
     addLog(LOG_LEVEL_ERROR, "OTA  : Connection to OTA server failed");
@@ -37,24 +37,24 @@ void OTA() {
     if (line == "\r") {
       break;
     }
-    if(line.startsWith("Content-Length: ")) {
+    if (line.startsWith("Content-Length: ")) {
       contentLength = line.substring(16).toInt();
-      if(contentLength == 0) {
+      if (contentLength == 0) {
         addLog(LOG_LEVEL_ERROR, "OTA  : New image is 0 bytes. Aborting update");
         otaclient.stop();
         return;
       }
     }
-    if(line.startsWith("HTTP/")) {
-      responseCode = line.substring(9,12).toInt();
-      if(responseCode != 200) {
+    if (line.startsWith("HTTP/")) {
+      responseCode = line.substring(9, 12).toInt();
+      if (responseCode != 200) {
         addLog(LOG_LEVEL_ERROR, "OTA  : Server error: " + String(responseCode));
         otaclient.stop();
         return;
       }
     }
-    if(line.startsWith("Content-Type: ")) {
-      if(! line.startsWith("Content-Type: application/octet-stream")) {
+    if (line.startsWith("Content-Type: ")) {
+      if (! line.startsWith("Content-Type: application/octet-stream")) {
         addLog(LOG_LEVEL_ERROR, "OTA  : Server sends wrong " + line);
         otaclient.stop();
         return;
@@ -63,14 +63,14 @@ void OTA() {
   }
 
   // check if there is enough space to store the image
-  if(! Update.begin(contentLength)) {
+  if (! Update.begin(contentLength)) {
     addLog(LOG_LEVEL_ERROR, "OTA  : Not enough space to store image");
     otaclient.stop();
     return;
   }
   addLog(LOG_LEVEL_INFO, "OTA  : Downloading and installing firmware. This may take a few minutes");
   size_t written = Update.writeStream(otaclient);
-  if(written < contentLength) {
+  if (written < contentLength) {
     addLog(LOG_LEVEL_ERROR, "OTA  : Only wrote " + String(written) + " bytes, should be " + String(contentLength));
     otaclient.stop();
     return;
@@ -85,4 +85,3 @@ void OTA() {
     }
   }
 }
-

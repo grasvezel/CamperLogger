@@ -1,4 +1,4 @@
-String html_head = "<html><head><title>Camper Control</title><style>body {background-color: white; color: black;font-size: 40px;}td {font-size: 40px;}input[type=checkbox]{padding:2px;transform:scale(3);}input[type=password],select,input[type=submit],input[type=text],input[type=number]{-webkit-appearance: none;-moz-appearance: none; display: block;margin: 0;width: 100%;height: 56px;line-height: 40px;font-size: 40px;border: 1px solid #bbb;}a, a.vsited {font-size: 15px;text-decoration: none;color: #ffffff;background-color: #005ca9;padding: 10px;display: inline-block;border: 1px solid black;border-radius: 10px;text-transform: uppercase;font-weight: bold;}pre {display: block;background-color: #f0f0f0;border: 1px solid black;font-size: 17px;}</style><meta name='apple-mobile-web-app-capable' content='yes'><meta name='viewport' content='user-scalable=no, initial-scale=.5 width=device-width'><meta charset='UTF-8'></head><body><p><a href='/'>Home</a><a href='/wifi'>WiFi config</a><a href='/cfg'>Settings</a><a href='/bmv'>BMV</a><a href='/mppt'>MPPT</a><a href='/sensors'>Sensors</a><hr>";
+String html_head = "<html><head><title>Camper Control</title><style>body {font-family: verdana;background-color: white; color: black;font-size: 40px;}td,th{font-size: 40px;text-align:left;}input[type=checkbox]{padding:2px;transform:scale(3);}input[type=password],select,input[type=submit],input[type=text],input[type=number]{-webkit-appearance: none;-moz-appearance: none; display: block;margin: 0;width: 100%;height: 56px;line-height: 40px;font-size: 40px;border: 1px solid #bbb;}a, a.vsited {font-size: 15px;text-decoration: none;color: #ffffff;background-color: #005ca9;padding: 10px;display: inline-block;border: 1px solid black;border-radius: 10px;text-transform: uppercase;font-weight: bold;}pre {display: block;background-color: #f0f0f0;border: 1px solid black;font-size: 17px;}</style><meta name='apple-mobile-web-app-capable' content='yes'><meta name='viewport' content='user-scalable=no, initial-scale=.5 width=device-width'><meta charset='UTF-8'></head><body><p><a href='/'>Home</a><a href='/wifi'>WiFi config</a><a href='/cfg'>Settings</a><a href='/bmv'>BMV</a><a href='/mppt'>MPPT</a><a href='/sensors'>Sensors</a><hr>";
 
 void WebServerInit() {
   addLog(LOG_LEVEL_INFO, F("WEB  : Server initializing"));
@@ -9,9 +9,10 @@ void WebServerInit() {
   WebServer.on("/bmv", handle_bmv);
   WebServer.on("/sensors", handle_sensors);
   WebServer.on("/wifi", handle_wificonfig);
-  WebServer.on("/savewif", handle_savewificonfig);
+  WebServer.on("/savewifi", handle_savewificonfig);
   WebServer.on("/cfg", handle_cfg);
   WebServer.on("/savecfg", handle_savecfg);
+  WebServer.on("/reset", ResetFactory);
 
   WebServer.onNotFound(handle_notfound);
 
@@ -51,7 +52,6 @@ void handle_wificonfig() {
 }
 
 void handle_savewificonfig() {
-  String message;
   for (int i = 0; i < WebServer.args(); i++) {
     if (WebServer.argName(i) == "ssid")
       WebServer.arg(i).toCharArray(SecuritySettings.WifiSSID, 32);
@@ -59,9 +59,7 @@ void handle_savewificonfig() {
       WebServer.arg(i).toCharArray(SecuritySettings.WifiKey, 64);
   }
   addLog(LOG_LEVEL_DEBUG, "WEB  : Config request: SSID: " + String(SecuritySettings.WifiSSID) + " Key: " + String(SecuritySettings.WifiKey));
-
   addLog(LOG_LEVEL_INFO, "WEB  : Saving settings... " + SaveSettings());
-  Serial.println(SaveSettings());
 
   bool wifi_ok = WifiConnect(3);
   if (wifi_ok) {
@@ -95,10 +93,14 @@ void handle_mppt() {
   addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /mppt"));
   String content;
   content = html_head;
-  content += "Last MPPT readings:\n";
-  content += "<pre>\n";
-  content += lastBlockMPPT;
-  content += "</pre>";
+  if (MPPT_present) {
+    content += "Last MPPT readings:\n";
+    content += "<pre>\n";
+    content += lastBlockMPPT;
+    content += "</pre>";
+  } else {
+    content += "No MPPT present";
+  }
   WebServer.send(200, "text/html", content);
   if (timerAPoff != 0)
     timerAPoff = millis() + 10000L;
@@ -110,10 +112,14 @@ void handle_bmv() {
   addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /bmv"));
   String content;
   content = html_head;
-  content += "Last BMV readings:\n";
-  content += "<pre>\n";
-  content += lastBlockBMV;
-  content += "</pre>";
+  if (BMV_present) {
+    content += "Last BMV readings:\n";
+    content += "<pre>\n";
+    content += lastBlockBMV;
+    content += "</pre>";
+  } else {
+    content += "No BMV present";
+  }
   WebServer.send(200, "text/html", content);
   if (timerAPoff != 0)
     timerAPoff = millis() + 10000L;
@@ -125,10 +131,14 @@ void handle_sensors() {
   addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /sensors"));
   String content;
   content = html_head;
-  content += "Last sensor readings:\n";
-  content += "<pre>\n";
-  content += "Not yet implemented.";
-  content += "</pre>";
+  content += "<h2>Temperature sensors:</h2>";
+  for (int i = 0; i < 10; i++) {
+    if (readings.temp[i] != -127) {
+      content += "Sensor " + String(i) + ": " + String(readings.temp[i]) + "&deg;C<br>";
+    }
+  }
+  content += "<h2>Tank sensor:</h2>";
+  content += String(readings.Tank_level) + "%<br>";
   WebServer.send(200, "text/html", content);
   if (timerAPoff != 0)
     timerAPoff = millis() + 10000L;
@@ -141,26 +151,88 @@ void handle_cfg() {
   String content;
   content = html_head;
   content += "<form action=\"/savecfg\" method=\"get\">";
-  content += "<h3>Influxdb settings</h3>";
-  content += "Influxdb host: <input type=\"text\" name=\"idb_host\" value=\""+ Settings.influx_host + "\"><br>";
-  content += "Influxdb username: <input type=\"text\" name=\"idb_user\" value=\""+ Settings.influx_user + "\"><br>";
-  content += "Influxdb password: <input type=\"password\" name=\"idb_pass\" value=\""+ Settings.influx_pass + "\"><br>";
-  content += "Influxdb database name: <input type=\"text\" name=\"idb_db\" value=\""+ Settings.influx_db + "\"><br>";
-  content += "Influxdb measurement name: <input type=\"text\" name=\"idb_mn\" value=\""+ Settings.influx_mn + "\"><br>";
-  content += "<h3>What to write to influxdb:</h3>";
-  content += "&emsp;<input type=\"checkbox\" value=\"idb_bmv\">&emsp;BMV readings<br>";
-  content += "&emsp;<input type=\"checkbox\" value=\"idb_mppt\">&emsp;MPPT readings<br>";
-  content += "&emsp;<input type=\"checkbox\" value=\"idb_temp\">&emsp;Temperatures<br>";
-  content += "&emsp;<input type=\"checkbox\" value=\"idb_tank\">&emsp;Tank level<br>";
-  content += "&emsp;<input type=\"checkbox\" value=\"idb_coords\">&emsp;GPS coords<br>";
-  content += "&emsp;<input type=\"checkbox\" value=\"idb_geohash\">&emsp;GPS geohash<br>";
-  content += "&emsp;<input type=\"checkbox\" value=\"idb_speed\">&emsp;GPS speed and heading<br>";
-  content += "<h3>Intervals</h3>";
-  content += "Seconds between measurement uploads: <input type=\"number\" name=\"idb_interval\"><br>";
-  content += "Seconds between GPS uploads: <input type=\"number\" name=\"idb_interval\"><br>";
-  
-  content += "<p><input type=\"submit\" value=\"Save settings\">";
-  content += "</form></html>";
+  content += "<table>";
+  content += "<tr><th>Influxdb settings</th><th></th></tr>";
+
+  content += "<tr><td>Write data</td><td><input type=\"checkbox\"";
+  if (Settings.upload_influx)
+    content += " checked";
+  content += " name=\"idb_enabled\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>Host</td><td><input type=\"text\" name=\"idb_host\" value=\"" + String(Settings.influx_host) + "\"></td></tr>";
+  content += "<tr><td>Port number</td><td><input type=\"number\" name=\"idb_port\" value=\"" + String(Settings.influx_port) + "\"></td></tr>";
+
+  content += "<tr><td>Use SSL</td><td><input type=\"checkbox\"";
+  if (Settings.influx_ssl)
+    content += " checked";
+  content += " name=\"idb_ssl\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>Username</td><td><input type=\"text\" name=\"idb_user\" value=\"" + String(Settings.influx_user) + "\"></td></tr>";
+  content += "<tr><td>Password</td><td><input type=\"password\" name=\"idb_pass\" value=\"" + String(Settings.influx_pass) + "\"></td></tr>";
+  content += "<tr><td>Database name</td><td><input type=\"text\" name=\"idb_db\" value=\"" + String(Settings.influx_db) + "\"></td></tr>";
+  content += "<tr><td>Measurement name</td><td><input type=\"text\" name=\"idb_mn\" value=\"" + String(Settings.influx_mn) + "\"></td></tr>";
+  content += "<tr><td>&nbsp;</td><td></td></tr>";
+  content += "<tr><th>What to write to influxdb:</th><th></th></tr>";
+
+  content += "<tr><td>BMV readings</td><td><input type=\"checkbox\"";
+  if (Settings.influx_write_bmv)
+    content += " checked";
+  content += " name=\"idb_bmv\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>MPPT readings</td><td><input type=\"checkbox\"";
+  if (Settings.influx_write_mppt)
+    content += " checked";
+  content += " name=\"idb_mppt\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>Temperatures</td><td><input type=\"checkbox\"";
+  if (Settings.influx_write_temp)
+    content += " checked";
+  content += " name=\"idb_temp\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>Tank level</td><td><input type=\"checkbox\"";
+  if (Settings.influx_write_tank)
+    content += " checked";
+  content += " name=\"idb_tank\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>GPS coords</td><td><input type=\"checkbox\"";
+  if (Settings.influx_write_coords)
+    content += " checked";
+  content += " name=\"idb_coords\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>Geohash</td><td><input type=\"checkbox\"";
+  if (Settings.influx_write_geohash)
+    content += " checked";
+  content += " name=\"idb_geohash\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>Speed / heading</td><td><input type=\"checkbox\"";
+  if (Settings.influx_write_speed_heading)
+    content += " checked";
+  content += " name=\"idb_speed\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>&nbsp;</td><td></td></tr>";
+  content += "<tr><th>HTTP GET:</th><th></th></tr>";
+
+  content += "<tr><td>Write data</td><td><input type=\"checkbox\"";
+  if (Settings.upload_get)
+    content += " checked";
+  content += " name=\"get_enabled\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>Host:</td><td><input type=\"text\" name=\"get_host\" value=\"" + String(Settings.upload_get_host) + "\"></td></tr>";
+  content += "<tr><td>Port number</td><td><input type=\"number\" name=\"get_port\" value=\"" + String(Settings.upload_get_port) + "\"></td></tr>";
+
+  content += "<tr><td>Use SSL</td><td><input type=\"checkbox\"";
+  if (Settings.upload_get_ssl)
+    content += " checked";
+  content += " name=\"get_ssl\" value=\"1\"></td></tr>";
+
+  content += "<tr><td>&nbsp;</td><td></td></tr>";
+  content += "<tr><th>Intervals</th><th></th></tr>";
+
+  content += "<tr><td>Upload interval</td><td><input type=\"number\" name=\"idb_interval\" value=\"" + String(Settings.readings_upload_interval) + "\"></td></tr>";
+  content += "<tr><td>GPS upload interval</td><td><input type=\"number\" name=\"gps_interval\" value=\"" + String(Settings.gps_upload_interval) + "\"></td></tr>";
+
+  content += "<tr><td colspan=\"2\"><input type=\"submit\" value=\"Save settings\"></td></tr>";
+  content += "</table></form></html>";
   WebServer.send(200, "text/html", content);
   if (timerAPoff != 0)
     timerAPoff = millis() + 10000L;
@@ -170,11 +242,91 @@ void handle_cfg() {
 void handle_savecfg() {
   statusLED(true);
   addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /savecfg"));
+  // Set booleans to 0, we don't get variables from unchecked checkboxes.
+  Settings.upload_influx = 0;
+  Settings.influx_ssl = 0;
+  Settings.upload_get = 0;
+  Settings.upload_get_ssl = 0;
+  Settings.influx_write_bmv = 0;
+  Settings.influx_write_mppt = 0;
+  Settings.influx_write_temp = 0;
+  Settings.influx_write_tank = 0;
+  Settings.influx_write_geohash = 0;
+  Settings.influx_write_coords = 0;
+  Settings.influx_write_speed_heading = 0;
+
+  for (int i = 0; i < WebServer.args(); i++) {
+    if (WebServer.argName(i) == "get_enabled" && WebServer.arg(i) == "1") {
+      Settings.upload_get = 1;
+    }
+    if (WebServer.argName(i) == "idb_ssl" && WebServer.arg(i) == "1") {
+      Settings.influx_ssl = 1;
+    }
+    if (WebServer.argName(i) == "idb_enabled" && WebServer.arg(i) == "1") {
+      Settings.upload_influx = 1;
+    }
+    if (WebServer.argName(i) == "idb_bmv" && WebServer.arg(i) == "1") {
+      Settings.influx_write_bmv = 1;
+    }
+    if (WebServer.argName(i) == "idb_mppt" && WebServer.arg(i) == "1") {
+      Settings.influx_write_mppt = 1;
+    }
+    if (WebServer.argName(i) == "idb_temp" && WebServer.arg(i) == "1") {
+      Settings.influx_write_temp = 1;
+    }
+    if (WebServer.argName(i) == "idb_tank" && WebServer.arg(i) == "1") {
+      Settings.influx_write_tank = 1;
+    }
+    if (WebServer.argName(i) == "idb_geohash" && WebServer.arg(i) == "1") {
+      Settings.influx_write_geohash = 1;
+    }
+    if (WebServer.argName(i) == "idb_coords" && WebServer.arg(i) == "1") {
+      Settings.influx_write_coords = 1;
+    }
+    if (WebServer.argName(i) == "idb_speed" && WebServer.arg(i) == "1") {
+      Settings.influx_write_speed_heading = 1;
+    }
+    if (WebServer.argName(i) == "get_ssl" && WebServer.arg(i) == "1") {
+      Settings.upload_get_ssl = 1;
+    }
+    if (WebServer.argName(i) == "idb_host") {
+      WebServer.arg(i).toCharArray(Settings.influx_host, 64);
+    }
+    if (WebServer.argName(i) == "idb_db") {
+      WebServer.arg(i).toCharArray(Settings.influx_db, 16);
+    }
+    if (WebServer.argName(i) == "idb_mn") {
+      WebServer.arg(i).toCharArray(Settings.influx_mn, 16);
+    }
+    if (WebServer.argName(i) == "idb_user") {
+      WebServer.arg(i).toCharArray(Settings.influx_user, 16);
+    }
+    if (WebServer.argName(i) == "idb_pass") {
+      WebServer.arg(i).toCharArray(Settings.influx_pass, 32);
+    }
+    if (WebServer.argName(i) == "get_host") {
+      WebServer.arg(i).toCharArray(Settings.upload_get_host, 32);
+    }
+    if (WebServer.argName(i) == "idb_port") {
+      Settings.influx_port = WebServer.arg(i).toInt();
+    }
+    if (WebServer.argName(i) == "get_port") {
+      Settings.upload_get_port = WebServer.arg(i).toInt();
+    }
+    if (WebServer.argName(i) == "gps_interval") {
+      Settings.gps_upload_interval = WebServer.arg(i).toInt();
+    }
+    if (WebServer.argName(i) == "idb_interval") {
+      Settings.readings_upload_interval = WebServer.arg(i).toInt();
+    }
+  }
+
+  // upload interval
+  // gps interval
+
   String content;
-  content = html_head;
-  WebServer.send(200, "text/html", content);
-  if (timerAPoff != 0)
-    timerAPoff = millis() + 10000L;
+  SaveSettings();
+  WebServer.sendContent("HTTP/1.1 302\r\nLocation: /cfg\r\n");
   statusLED(false);
 }
 

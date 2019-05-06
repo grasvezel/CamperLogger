@@ -5,7 +5,7 @@ void readVEdirect(int device) {
   bool block_end = 0;
   bool in_block  = 0;
   // We get a block every second. However, a BMV sends different odd and even blocks.
-  // This means it may take a little over two seconds to get to the block we want. 
+  // This means it may take a little over two seconds to get to the block we want.
   unsigned long vedirect_timeout = millis() + 4000L; //
 
   while (!block_end && !timeOutReached(vedirect_timeout)) {
@@ -73,7 +73,7 @@ void readVEdirect(int device) {
               if (device == DEVICE_BMV_B2) {
                 readings.BMV_B2_ok = 0;
                 addLog(LOG_LEVEL_ERROR, "VICTR: Checksum error reading device " + String(device));
-                lastBlockBMV = thisBlock + "Invalid checksum BMV block 2";                
+                lastBlockBMV = thisBlock + "Invalid checksum BMV block 2";
               }
             }
           }
@@ -173,7 +173,7 @@ void parseBMV(String line) {
   if (line.startsWith("SOC\t")) {
     readings.BMV_SOC = line.substring(4).toFloat() / 10;
   }
-  
+
   // BMV battery current
   if (line.startsWith("I\t")) {
     readings.BMV_Ibatt = line.substring(2).toFloat() / 1000;
@@ -191,7 +191,7 @@ void parseBMV(String line) {
 
   // BMV battery power
   if (line.startsWith("P\t")) {
-    readings.BMV_Pcharge = line.substring(2).toFloat();
+    readings.BMV_Pbatt = line.substring(2).toFloat();
   }
 
   // BMV Product ID
@@ -206,49 +206,49 @@ void parseBMV(String line) {
 }
 
 String getVictronDeviceByPID(String PID) {
-   String device = "";
-   if(PID == "0x203") device = "BMV-700";
-   if(PID == "0x204") device = "BMV-702";
-   if(PID == "0x205") device = "BMV-700H";
-   if(PID == "0x0300") device = "BlueSolar MPPT 70|15";
-   if(PID == "0xA040") device = "BlueSolar MPPT 75|50";
-   if(PID == "0xA041") device = "BlueSolar MPPT 150|35";
-   if(PID == "0xA042") device = "BlueSolar MPPT 75|15";
-   if(PID == "0xA043") device = "BlueSolar MPPT 100|15";
-   if(PID == "0xA044") device = "BlueSolar MPPT 100|30";
-   if(PID == "0xA045") device = "BlueSolar MPPT 100|50";
-   if(PID == "0xA046") device = "BlueSolar MPPT 150|70";
-   if(PID == "0xA047") device = "BlueSolar MPPT 150|100";
-   if(PID == "0xA048") device = "Unknown";
-   if(PID == "0xA049") device = "BlueSolar MPPT 100|50 rev2";
-   if(PID == "0xA04A") device = "BlueSolar MPPT 100|30 rev2";
-   if(PID == "0xA04B") device = "BlueSolar MPPT 150|35 rev2";
-   if(PID == "0xA04C") device = "BlueSolar MPPT 75|10";
-   if(PID == "0xA04D") device = "BlueSolar MPPT 150|45";
-   if(PID == "0xA04E") device = "BlueSolar MPPT 150|60";
-   if(PID == "0xA04F") device = "BlueSolar MPPT 150|85";
-   if(PID == "0xA050") device = "SmartSolar MPPT 250|100";
-   if(PID == "0xA051") device = "SmartSolar MPPT 150|100";
-   if(PID == "0xA052") device = "SmartSolar MPPT 150|85";
-   if(PID == "0xA053") device = "SmartSolar MPPT 75|15";
-   if(PID == "0xA054") device = "SmartSolar MPPT 75|10";
-   if(PID == "0xA055") device = "SmartSolar MPPT 100|15";
-   if(PID == "0xA056") device = "SmartSolar MPPT 100|30";
-   if(PID == "0xA057") device = "SmartSolar MPPT 100|50";
-   if(PID == "0xA058") device = "SmartSolar MPPT 150|35";
-   if(PID == "0xA059") device = "SmartSolar MPPT 150|100 rev2";
-   if(PID == "0xA05A") device = "SmartSolar MPPT 150|85 rev2";
-   if(PID == "0xA05B") device = "SmartSolar MPPT 250|70";
-   if(PID == "0xA05C") device = "SmartSolar MPPT 250|85";
-   if(PID == "0xA05D") device = "SmartSolar MPPT 250|60";
-   if(PID == "0xA05E") device = "SmartSolar MPPT 250|45";
-   if(PID == "0xA05F") device = "SmartSolar MPPT 100|20";
-   if(PID == "0xA060") device = "SmartSolar MPPT 100|20 48V";
-   if(PID == "0xA061") device = "SmartSolar MPPT 150|45";
-   if(PID == "0xA062") device = "SmartSolar MPPT 150|60";
-   if(PID == "0xA063") device = "SmartSolar MPPT 150|70";
-   if(PID == "0xA064") device = "SmartSolar MPPT 250|85 rev2";
-   if(PID == "0xA065") device = "SmartSolar MPPT 250|100 rev2";
+  String device = "";
+  if (PID == "0x203") device = "BMV-700";
+  if (PID == "0x204") device = "BMV-702";
+  if (PID == "0x205") device = "BMV-700H";
+  if (PID == "0x0300") device = "BlueSolar MPPT 70|15";
+  if (PID == "0xA040") device = "BlueSolar MPPT 75|50";
+  if (PID == "0xA041") device = "BlueSolar MPPT 150|35";
+  if (PID == "0xA042") device = "BlueSolar MPPT 75|15";
+  if (PID == "0xA043") device = "BlueSolar MPPT 100|15";
+  if (PID == "0xA044") device = "BlueSolar MPPT 100|30";
+  if (PID == "0xA045") device = "BlueSolar MPPT 100|50";
+  if (PID == "0xA046") device = "BlueSolar MPPT 150|70";
+  if (PID == "0xA047") device = "BlueSolar MPPT 150|100";
+  if (PID == "0xA048") device = "Unknown";
+  if (PID == "0xA049") device = "BlueSolar MPPT 100|50 rev2";
+  if (PID == "0xA04A") device = "BlueSolar MPPT 100|30 rev2";
+  if (PID == "0xA04B") device = "BlueSolar MPPT 150|35 rev2";
+  if (PID == "0xA04C") device = "BlueSolar MPPT 75|10";
+  if (PID == "0xA04D") device = "BlueSolar MPPT 150|45";
+  if (PID == "0xA04E") device = "BlueSolar MPPT 150|60";
+  if (PID == "0xA04F") device = "BlueSolar MPPT 150|85";
+  if (PID == "0xA050") device = "SmartSolar MPPT 250|100";
+  if (PID == "0xA051") device = "SmartSolar MPPT 150|100";
+  if (PID == "0xA052") device = "SmartSolar MPPT 150|85";
+  if (PID == "0xA053") device = "SmartSolar MPPT 75|15";
+  if (PID == "0xA054") device = "SmartSolar MPPT 75|10";
+  if (PID == "0xA055") device = "SmartSolar MPPT 100|15";
+  if (PID == "0xA056") device = "SmartSolar MPPT 100|30";
+  if (PID == "0xA057") device = "SmartSolar MPPT 100|50";
+  if (PID == "0xA058") device = "SmartSolar MPPT 150|35";
+  if (PID == "0xA059") device = "SmartSolar MPPT 150|100 rev2";
+  if (PID == "0xA05A") device = "SmartSolar MPPT 150|85 rev2";
+  if (PID == "0xA05B") device = "SmartSolar MPPT 250|70";
+  if (PID == "0xA05C") device = "SmartSolar MPPT 250|85";
+  if (PID == "0xA05D") device = "SmartSolar MPPT 250|60";
+  if (PID == "0xA05E") device = "SmartSolar MPPT 250|45";
+  if (PID == "0xA05F") device = "SmartSolar MPPT 100|20";
+  if (PID == "0xA060") device = "SmartSolar MPPT 100|20 48V";
+  if (PID == "0xA061") device = "SmartSolar MPPT 150|45";
+  if (PID == "0xA062") device = "SmartSolar MPPT 150|60";
+  if (PID == "0xA063") device = "SmartSolar MPPT 150|70";
+  if (PID == "0xA064") device = "SmartSolar MPPT 250|85 rev2";
+  if (PID == "0xA065") device = "SmartSolar MPPT 250|100 rev2";
 
-   return(device);
+  return (device);
 }

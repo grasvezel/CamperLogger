@@ -1,22 +1,21 @@
 /*
- *  1-WIRE        GPIO 26
- *  GPS           GPIO 27
- *  VE.Direct 1   GPIO 32
- *  VE.Direct 2   GPIO 36
- *  LED           GPIO 13
- *  RELAY 1       GPIO 16
- *  RELAY 2       GPIO 21
- *  Tank sensor   GPIO 25
- */
+    1-WIRE        GPIO 26
+    GPS           GPIO 27
+    VE.Direct 1   GPIO 32
+    VE.Direct 2   GPIO 36
+    LED           GPIO 13
+    RELAY 1       GPIO 16
+    RELAY 2       GPIO 21
+    Tank sensor   GPIO 25
+*/
 
 // Partition scheme: Minimal SPIFFS (1.9MB APP with OTA)/190KB SPIFFS)
 
-#include "FS.h"
-#include "SPI.h"
-
-#include "SPIFFS.h"
-#include "esp_vfs.h"
-#include "esp_vfs_fat.h"
+#include <FS.h>
+#include <SPI.h>
+#include <SPIFFS.h>
+//#include "esp_vfs.h"
+//#include "esp_vfs_fat.h"
 #include "esp_log.h"
 #include <ctype.h>
 #include <WiFi.h>
@@ -27,46 +26,36 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-//------------------------------------------------------------------------------
-// Settings
-// The idea is that this struct is going to be saved on SPIFFS in the future.
-// Maybe configurable through the web interface. In any case credentials should
-// not be in the code. This is a tepmorary solution
-//------------------------------------------------------------------------------
+// Changing this number wil reset all settings to default!
+#define CONFIG_FILE_VERSION 4
 
-struct SettingsStruct {
+typedef struct SettingsStruct {
+  int           config_file_version;
   byte          DST;
-  
-  bool          upload_get                  = 1;
-  String        upload_get_url              = "https://bus.tarthorst.net";
-  int           upload_get_port             = 443;
+  bool          upload_get;
+  char          upload_get_host[64];
+  bool          upload_get_ssl;
+  int           upload_get_port;
+  bool          upload_influx;
+  char          influx_host[64];
+  int           influx_port;
+  bool          influx_ssl;
+  char          influx_db[16];
+  char          influx_mn[16];
+  char          influx_user[16];
+  char          influx_pass[32];
+  bool          influx_write_bmv;
+  bool          influx_write_mppt;
+  bool          influx_write_temp;
+  bool          influx_write_tank;
+  bool          influx_write_geohash;
+  bool          influx_write_coords;
+  bool          influx_write_speed_heading;
+  int           gps_upload_interval;
+  int           readings_upload_interval;
+};
 
-  bool          upload_influx               = 1;
-  String        influx_host                 = "bus.tarthorst.net";
-  int           influx_port                 = 8086;
-  String        influx_db                   = "test";
-  String        influx_mn                   = "camper";          // the name of the measurement
-  String        influx_user                 = "testuser";
-  String        influx_pass                 = "testpass";
-
-  bool          influx_write_bmv            = 1;
-  bool          influx_write_mppt           = 1;
-  bool          influx_write_temp           = 1;
-  bool          influx_write_tank           = 1;
-  bool          influx_write_geohash        = 1;
-  bool          influx_write_coords         = 1;
-  bool          influx_write_speed_heading  = 1;
-
-  int           gps_upload_interval         = 60;               // seconds
-  int           readings_upload_interval    = 60;               // seconds
-
-} Settings;
-
-
-//void fileSystemCheck();
-//void addLog();
-//void WifiAPconfig();
-//void handleCharging();
+SettingsStruct Settings;
 
 String getFileChecksum( String );
 
@@ -88,15 +77,11 @@ byte logLevel                     = 4;                // not a #define, logLevel
 #define NTP_SERVER                  "pool.ntp.org"
 #define TIME_ZONE                   60                // minutes ahead of GMT during winter.
 
-// DATA LOGGING
-#define DEFAULT_LOG_HOST            "bus.tarthorst.net"
-#define LOG_INTERVAL                60                // In seconds
-
 // Geohash
 #define GEOHASH_PRECISION           8
 
 // AP password
-#define DEFAULT_PASSWORD            "poespuckje"
+#define DEFAULT_PASSWORD            "loggerconfig"
 
 // PIN DEFINITIONS
 #define PIN_STATUS_LED              2                 // LED on ESP32 dev board
@@ -129,13 +114,13 @@ struct SecurityStruct {
 struct readingsStruct {
   // Temperature sensors
   float temp[10];   // max 10 temperature sensors (deg C)
-  
+
   // BMV vars
   float  BMV_Vbatt;   // BMV battery voltage (V)
   float  BMV_Vaux;    // BMV auxilary voltage (V)
   float  BMV_SOC;     // BMV State Of Charge (%)
   float  BMV_Ibatt ;  // BMV battery current (A)
-  int    BMV_Pcharge; // BMV charge power (W)
+  int    BMV_Pbatt;   // BMV charge power (W)
   int    BMV_TTG;     // BMV Time To Go (minutes)
   float  BMV_LDD;     // BMV Last Discharge Depth (Ah)
   bool   BMV_B1_ok;   // BMV checksum on block one OK
@@ -162,7 +147,9 @@ struct readingsStruct {
   String GPS_date;   // GPS date DDMMYY
   String GPS_time;   // GPS time HHMMSS (in UTC!)
   String GPS_lat;    // GPS latitude (0...90 N or S)
+  String GPS_lat_abs;// GPS latitude (-90...90)
   String GPS_lon;    // GPS longitude (0...180 E or W)
+  String GPS_lon_abs;// GPS longitude (-180...180)
   String GPS_speed;  // GPS speed in km/h
   String GPS_heading;// GPS heading (in deg, 0 if not moving)
   String GPS_geohash;// Geohash
@@ -202,8 +189,6 @@ bool read_temp           = 1;    // read temperature sensors or skip it?
 bool read_gps            = 1;    // read GPS data or skip it?
 bool read_tank_level     = 1;    // read tank level sensor or skip it?
 
-String tmp;
-
 String Fcrc;
 uint8_t ledChannelPin[16];
 uint8_t chipid[6];
@@ -211,13 +196,14 @@ char chipMAC[12];
 IPAddress apIP(192, 168, 4, 1);
 
 unsigned long timerAPoff    = millis() + 10000L;
-unsigned long timerLog      = millis() + LOG_INTERVAL * 1000L;
+unsigned long timerLog      = millis() + 60000L;    // first upload after 60 seconds.
+unsigned long timerGPS      = millis() + 60000L;
 unsigned long nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
 
 // prototypes with default ports for http and https
-String httpsGet(String path, String query, int port=443);
-String httpGet(String path, String query, int port=80);
-void influx_post(String var, String value, String field="value");
+String httpsGet(String path, String query, int port = 443);
+String httpGet(String path, String query, int port = 80);
+void influx_post(String var, String value, String field = "value");
 
 OneWire oneWire(ONEWIRE_PIN);
 
@@ -231,7 +217,7 @@ HardwareSerial SerialVE(2);      // VE direct connections
 
 // Background tasks. Not in use atm.
 void backgroundTasks(void * parameter) {
-  for(;;) {
+  for (;;) {
     runBackgroundTasks();
     // 10ms delay to avoid WDT being triggered
     vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -247,7 +233,7 @@ void setup() {
   pinMode(VE_DIRECT_PIN_1, INPUT);
   pinMode(VE_DIRECT_PIN_2, INPUT);
   pinMode(TANK_LEVEL_SENSOR_PIN, INPUT);
-  
+
   digitalWrite(PIN_EXT_LED, HIGH);
   delay(500);
   digitalWrite(PIN_EXT_LED, LOW);
@@ -261,7 +247,7 @@ void setup() {
     &BackgroundTask,  // Task handle
     0);               // core
 
-  Serial.begin(19200);
+  Serial.begin(115200);
   SerialGPS.begin(9600, SERIAL_7E1, GPS_PIN, -1, false);
 
   addLog(LOG_LEVEL_INFO, "CORE : Version " + String(version) + " starting");
@@ -274,16 +260,15 @@ void setup() {
   sprintf(chipMAC, "%02x%02x%02x%02x%02x%02x", chipid[0], chipid[1], chipid[2], chipid[3], chipid[4], chipid[5]);
 
   fileSystemCheck();
-  //list("/spiffs/", NULL);
 
   addLog(LOG_LEVEL_INFO, "FILE : Loading settings");
   LoadSettings();
 
   addLog(LOG_LEVEL_INFO, "CORE : DST setting: " + String(Settings.DST));
-  
+
   WifiAPconfig();
   WifiConnect(3);
-  if(WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED) {
     addLog(LOG_LEVEL_DEBUG, "WIFI : WiFi connected, disabling AP off timer");
     timerAPoff = 0;
   }
@@ -300,24 +285,32 @@ void loop() {
   updateAPstatus();
   // process incoming requests
   WebServer.handleClient();
-  
+
   if (timerLog != 0 && timeOutReached(timerLog)) {
-    timerLog = millis() + LOG_INTERVAL * 1000L;
+    timerLog = millis() + Settings.readings_upload_interval * 1000L;
 
     // periodic tasks
-    addLog(LOG_LEVEL_INFO, "CORE : Performing periodic tasks");
+    addLog(LOG_LEVEL_INFO, "CORE : Uploading readings");
     digitalWrite(PIN_EXT_LED, HIGH);
-
-    // retry WiFi connection
-    if(WiFi.status() != WL_CONNECTED && timeOutReached(nextWifiRetry)) {
-      addLog(LOG_LEVEL_INFO, "WIFI : Not connected, trying to connect");
-      WifiConnect(3);
-      nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
-    }
-
     callHome();
     uploadGetData();
-    uploadInfluxData();
+    uploadInfluxReadings();
     digitalWrite(PIN_EXT_LED, LOW);
   }
+
+  if (timerGPS != 0 && timeOutReached(timerGPS)) {
+    timerGPS = millis() + Settings.gps_upload_interval * 1000L;
+    addLog(LOG_LEVEL_INFO, "CORE : Uploading GPS data");
+    digitalWrite(PIN_EXT_LED, HIGH);
+    digitalWrite(PIN_EXT_LED, LOW);
+    uploadInfluxGPS();
+  }
+
+  // retry WiFi connection
+  if (WiFi.status() != WL_CONNECTED && timeOutReached(nextWifiRetry)) {
+    addLog(LOG_LEVEL_INFO, "WIFI : Not connected, trying to connect");
+    WifiConnect(3);
+    nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
+  }
+
 }

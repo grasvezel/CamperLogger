@@ -43,6 +43,7 @@ void readGPS() {
   if (sentence.substring(0, pointer) == "S") {
     lat_abs = 0 - lat_abs;
   }
+  readings.GPS_lat_abs = String(lat_abs, 8);
   readings.GPS_lat += sentence.substring(0, pointer);
   sentence = sentence.substring(pointer + 1);
 
@@ -58,6 +59,7 @@ void readGPS() {
   if (sentence.substring(0, pointer) == "W") {
     lon_abs = 0 - lon_abs;
   }
+  readings.GPS_lon_abs = String(lon_abs, 8);
   readings.GPS_lon += sentence.substring(0, pointer);
   sentence = sentence.substring(pointer + 1);
 

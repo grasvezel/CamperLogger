@@ -27,10 +27,10 @@ uint32_t syncInterval = 3600;  // time sync will be attempted after this many se
 uint32_t errSyncInterval = 30;
 
 void addLog(byte level, String line) {
-  if(level > logLevel) {
+  if (level > logLevel) {
     return;
   }
-  if(sysTime > 1000) {
+  if (sysTime > 1000) {
     line = formattedDate() + " " + formattedTime() + " CPU" + String(xPortGetCoreID()) + " " + line + "\n";
   } else {
     line = "00-00-0000 00:00:00 CPU" + String(xPortGetCoreID()) + " " + line + "\n";
@@ -39,7 +39,7 @@ void addLog(byte level, String line) {
 }
 
 void addLogNoTime(byte level, String line) {
-  if(level > logLevel) {
+  if (level > logLevel) {
     return;
   }
   line = "                    CPU" + String(xPortGetCoreID()) + " " + line + "\n";
@@ -57,7 +57,7 @@ String formatIP(const IPAddress& ip) {
 
 /********************************************************************************************\
   Status LED
-\*********************************************************************************************/
+  \*********************************************************************************************/
 #define PWMRANGE 1024
 #define STATUS_PWM_NORMALVALUE (PWMRANGE>>2)
 #define STATUS_PWM_NORMALFADE (PWMRANGE>>8)
@@ -80,22 +80,22 @@ void statusLED(boolean traffic) {
     if (WiFi.status() == WL_CONNECTED)
     {
       long int delta = timePassedSince(gnLastUpdate);
-      if (delta>0 || delta<0 )
+      if (delta > 0 || delta < 0 )
       {
         nStatusValue -= STATUS_PWM_NORMALFADE; //ramp down slowly
         nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
-        gnLastUpdate=millis();
+        gnLastUpdate = millis();
       }
     }
     //AP mode is active
     else if (WifiIsAP())
     {
-      nStatusValue = ((millis()>>1) & PWMRANGE) - (PWMRANGE>>2); //ramp up for 2 sec, 3/4 luminosity
+      nStatusValue = ((millis() >> 1) & PWMRANGE) - (PWMRANGE >> 2); //ramp up for 2 sec, 3/4 luminosity
     }
     //Disconnected
     else
     {
-      nStatusValue = (millis()>>1) & (PWMRANGE>>2); //ramp up for 1/2 sec, 1/4 luminosity
+      nStatusValue = (millis() >> 1) & (PWMRANGE >> 2); //ramp up for 1/2 sec, 1/4 luminosity
     }
   }
 
@@ -113,7 +113,7 @@ void statusLED(boolean traffic) {
 
 /********************************************************************************************\
   Unsigned long Timer timeOut check
-\*********************************************************************************************/
+  \*********************************************************************************************/
 
 // Return the time difference as a signed value, taking into account the timers may overflow.
 // Returned timediff is between -24.9 days and +24.9 days.
@@ -153,23 +153,23 @@ void analogWriteESP32(int pin, int value)
 {
   // find existing channel if this pin has been used before
   int8_t ledChannel = -1;
-  for(byte x = 0; x < 16; x++)
+  for (byte x = 0; x < 16; x++)
     if (ledChannelPin[x] == pin)
       ledChannel = x;
 
-  if(ledChannel == -1) // no channel set for this pin
-    {
-      for(byte x = 0; x < 16; x++) // find free channel
-        if (ledChannelPin[x] == -1)
-          {
-            int freq = 5000;
-            ledChannelPin[x] = pin;  // store pin nr
-            ledcSetup(x, freq, 10);  // setup channel
-            ledcAttachPin(pin, x);   // attach to this pin
-            ledChannel = x;
-            break;
-          }
-    }
+  if (ledChannel == -1) // no channel set for this pin
+  {
+    for (byte x = 0; x < 16; x++) // find free channel
+      if (ledChannelPin[x] == -1)
+      {
+        int freq = 5000;
+        ledChannelPin[x] = pin;  // store pin nr
+        ledcSetup(x, freq, 10);  // setup channel
+        ledcAttachPin(pin, x);   // attach to this pin
+        ledChannel = x;
+        break;
+      }
+  }
   ledcWrite(ledChannel, value);
 }
 
@@ -189,7 +189,7 @@ unsigned long getNtpTime()
 
     const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
     byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
-    
+
     IPAddress timeServerIP;
     WiFi.hostByName(NTP_SERVER, timeServerIP);
 
@@ -332,7 +332,7 @@ void breakTime(unsigned long timeInput, struct timeStruct &tm) {
 }
 
 int weekday()
-{  return tm.Wday;
+{ return tm.Wday;
 }
 
 String formattedTime() {
@@ -341,13 +341,13 @@ String formattedTime() {
   String tm_hour;
   String tm_minute;
   String tm_second;
-  if(tm.Hour < 10)
+  if (tm.Hour < 10)
     timeString = "0";
   timeString += String(tm.Hour) + ":";
-  if(tm.Minute < 10)
+  if (tm.Minute < 10)
     timeString += "0";
   timeString += String(tm.Minute) + ":";
-  if(tm.Second < 10)
+  if (tm.Second < 10)
     timeString += "0";
   timeString += String(tm.Second);
   return timeString;
@@ -359,12 +359,12 @@ String formattedDate() {
   int month = tm.Month;
   int year = tm.Year;
   String timeString = "";
-  if(day < 10) {
+  if (day < 10) {
     timeString += "0";
   }
   timeString += String(day) + "-";
-  if(month < 10) {
-     timeString += "0";
+  if (month < 10) {
+    timeString += "0";
   }
   timeString += String(month) + "-";
   timeString += String(1970 + year);
@@ -372,24 +372,24 @@ String formattedDate() {
 }
 
 /********************************************************************************************\
-* Save a byte to RTC memory
-\*********************************************************************************************/
+  Save a byte to RTC memory
+  \*********************************************************************************************/
 #define RTC_BASE 65 // system doc says user area starts at 64, but it does not work (?)
 void saveToRTC(byte Par1)
 {
   byte buf[3] = {0xAA, 0x55, 0};
   buf[2] = Par1;
-//  system_rtc_mem_write(RTC_BASE, buf, 3);
+  //  system_rtc_mem_write(RTC_BASE, buf, 3);
 }
 
 
 /********************************************************************************************\
-* Read a byte from RTC memory
-\*********************************************************************************************/
+  Read a byte from RTC memory
+  \*********************************************************************************************/
 boolean readFromRTC(byte* data)
 {
   byte buf[3] = {0, 0, 0};
-//  system_rtc_mem_read(RTC_BASE, buf, 3);
+  //  system_rtc_mem_read(RTC_BASE, buf, 3);
   if (buf[0] == 0xAA && buf[1] == 0x55)
   {
     *data = buf[2];

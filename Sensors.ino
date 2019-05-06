@@ -1,7 +1,7 @@
 void readTemperatureSensors() {
   DallasTemperature sensors(&oneWire);
   sensors.requestTemperatures(); // Send the command to get temperatures
-  for(int sensorNr=0;sensorNr<10;sensorNr++) {
+  for (int sensorNr = 0; sensorNr < 10; sensorNr++) {
     float temperature = sensors.getTempCByIndex(sensorNr);
     readings.temp[sensorNr] = temperature;
   }
@@ -11,12 +11,12 @@ void readTemperatureSensors() {
 void readTankLevelSensor() {
   int loops = 10;
   int currenttanklevel = 0;
-  
-  for(int i=0;i<loops;i++) {
+
+  for (int i = 0; i < loops; i++) {
     currenttanklevel += analogRead(TANK_LEVEL_SENSOR_PIN);
   }
   currenttanklevel = currenttanklevel / loops;
-  
+
   // tank levels
   // 724 11   -55 mm    235   100%
   // 643 10   -70 mm    220    94%
@@ -32,38 +32,38 @@ void readTankLevelSensor() {
   // 0    0   -290 mm     0     0%
 
   readings.Tank_level = 0;
-  if(currenttanklevel > 10) {
-     readings.Tank_level = 11;
+  if (currenttanklevel > 10) {
+    readings.Tank_level = 11;
   }
-  if(currenttanklevel > 94) {
-     readings.Tank_level = 28;
+  if (currenttanklevel > 94) {
+    readings.Tank_level = 28;
   }
-  if(currenttanklevel > 202) {
-     readings.Tank_level = 36;
+  if (currenttanklevel > 202) {
+    readings.Tank_level = 36;
   }
-  if(currenttanklevel > 272) {
-     readings.Tank_level = 45;
+  if (currenttanklevel > 272) {
+    readings.Tank_level = 45;
   }
-  if(currenttanklevel > 329) {
-     readings.Tank_level = 53;
+  if (currenttanklevel > 329) {
+    readings.Tank_level = 53;
   }
-  if(currenttanklevel > 373) {
-     readings.Tank_level = 64;
+  if (currenttanklevel > 373) {
+    readings.Tank_level = 64;
   }
-  if(currenttanklevel > 419) {
-     readings.Tank_level = 70;
+  if (currenttanklevel > 419) {
+    readings.Tank_level = 70;
   }
-  if(currenttanklevel > 461) {
-     readings.Tank_level = 77;
+  if (currenttanklevel > 461) {
+    readings.Tank_level = 77;
   }
-  if(currenttanklevel > 523) {
-     readings.Tank_level = 87;
+  if (currenttanklevel > 523) {
+    readings.Tank_level = 87;
   }
-  if(currenttanklevel > 604) {
-     readings.Tank_level = 94;
+  if (currenttanklevel > 604) {
+    readings.Tank_level = 94;
   }
-  if(currenttanklevel > 684) {
-     readings.Tank_level = 100;
+  if (currenttanklevel > 684) {
+    readings.Tank_level = 100;
   }
   return;
 }
