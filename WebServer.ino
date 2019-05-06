@@ -12,6 +12,7 @@ void WebServerInit() {
   WebServer.on("/savewifi", handle_savewificonfig);
   WebServer.on("/cfg", handle_cfg);
   WebServer.on("/savecfg", handle_savecfg);
+  WebServer.on("/json", handle_json);
   WebServer.on("/reset", ResetFactory);
 
   WebServer.onNotFound(handle_notfound);
@@ -321,12 +322,66 @@ void handle_savecfg() {
     }
   }
 
-  // upload interval
-  // gps interval
-
   String content;
   SaveSettings();
   WebServer.sendContent("HTTP/1.1 302\r\nLocation: /cfg\r\n");
+  statusLED(false);
+}
+
+void handle_json() {
+  statusLED(true);
+  addLog(LOG_LEVEL_DEBUG, F("WEB  : Incoming request for /bmv"));
+  String content;
+  content  = "{\"bmv\":{";
+  content += "\"present\":\"" + String(BMV_present) + "\",";
+  content += "\"Vbatt\":\"" + String(readings.BMV_Vbatt) + "\",";
+  content += "\"Vaux\":\"" + String(readings.BMV_Vaux) + "\",";
+  content += "\"Ibatt\":\"" + String(readings.BMV_Ibatt) + "\",";
+  content += "\"SOC\":\"" + String(readings.BMV_SOC) + "\",";
+  content += "\"TTG\":\"" + String(readings.BMV_TTG) + "\",";
+  content += "\"LDD\":\"" + String(readings.BMV_LDD) + "\",";
+  content += "\"PID\":\"" + String(readings.BMV_PID) + "\"";
+  content += "},";
+  content += "\"mppt\":{";
+  content += "\"ytot\":\"" + String(readings.MPPT_ytot) + "\",";
+  content += "\"yday\":\"" + String(readings.MPPT_yday) + "\",";
+  content += "\"Pmax\":\"" + String(readings.MPPT_Pmax) + "\",";
+  content += "\"err\":\"" + String(readings.MPPT_err) + "\",";
+  content += "\"state\":\"" + String(readings.MPPT_state) + "\",";
+  content += "\"Vbatt\":\"" + String(readings.MPPT_Vbatt) + "\",";
+  content += "\"Ibatt\":\"" + String(readings.MPPT_Ibatt) + "\",";
+  content += "\"Vpv\":\"" + String(readings.MPPT_Vpv) + "\",";
+  content += "\"Ppv\":\"" + String(readings.MPPT_Ppv) + "\",";
+  content += "\"PID\":\"" + String(readings.MPPT_PID) + "\",";
+  content += "\"serial\":\"" + String(readings.MPPT_serial) + "\"";
+  content += "},"; 
+  content += "\"gps\":{";
+  content += "\"fix\":\"" + String(readings.GPS_fix) + "\",";
+  content += "\"date\":\"" + String(readings.GPS_date) + "\",";
+  content += "\"time\":\"" + String(readings.GPS_time) + "\",";
+  content += "\"lat\":\"" + String(readings.GPS_lat) + "\",";
+  content += "\"lat_abs\":\"" + String(readings.GPS_lat_abs) + "\",";
+  content += "\"lon\":\"" + String(readings.GPS_lon) + "\",";
+  content += "\"lon_abs\":\"" + String(readings.GPS_lon_abs) + "\",";
+  content += "\"speed\":\"" + String(readings.GPS_speed) + "\",";
+  content += "\"heading\":\"" + String(readings.GPS_heading) + "\",";
+  content += "\"geohash\":\"" + String(readings.GPS_geohash) + "\"";
+  content += "},"; 
+  content += "\"tank\":{";
+  content += "\"level\":\"" + String(readings.Tank_level) + "\"";
+  content += "},"; 
+  content += "\"temp\":{";
+  for(int i=0;i<10;i++) {
+    if (readings.temp[i] != -127) {
+      content += "\"temp" + String(i)+ "\":\"" + String(readings.temp[i]) + "\",";
+    }
+  }
+  content = content.substring(0, content.length() -1);
+  content += "}"; 
+  content += "}"; 
+  WebServer.send(200, "application/json", content);
+  if (timerAPoff != 0)
+    timerAPoff = millis() + 10000L;
   statusLED(false);
 }
 
