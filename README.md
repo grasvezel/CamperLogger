@@ -19,6 +19,7 @@ host (like a Raspberry Pi) if you don't. The logger itself does not store any da
 - Data upload is done over https
 - Supports logging directly to influxdb (no https support yet)
 - Configurable via webinterface
+- Output of all measurements in JSON via http for local displaying
 
 If you are interested in the hardware design and/or the PCB, send me a message.
 
