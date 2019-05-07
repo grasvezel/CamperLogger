@@ -233,16 +233,31 @@ void uploadFile(String content, String type) {
 void influx_post(String var, String value, String field) {
   String postVars = String(Settings.influx_mn) + ",item=" + var + ",logger=" + String(chipMAC) + " " + field + "=" + value;
 
-  WiFiClient client;
-  if (!client.connect(Settings.influx_host, Settings.influx_port)) {
-    return;
+  if (Settings.influx_ssl) {
+    WiFiClientSecure client;
+    if (!client.connect(Settings.influx_host, Settings.influx_port)) {
+      return;
+    }
+    client.println("POST /write?db=" + String(Settings.influx_db) + " HTTP/1.1");
+    client.println("Host: " + String(Settings.influx_host));
+    client.println("Authorization: Basic " + base64::encode(String(Settings.influx_user) + ":" + String(Settings.influx_pass)));
+    client.println("Connection: close");
+    client.println("Content-length: " + String(postVars.length()));
+    client.println();
+    client.println(postVars);
+    client.stop();
+  } else {
+    WiFiClient client;
+    if (!client.connect(Settings.influx_host, Settings.influx_port)) {
+      return;
+    }
+    client.println("POST /write?db=" + String(Settings.influx_db) + " HTTP/1.1");
+    client.println("Host: " + String(Settings.influx_host));
+    client.println("Authorization: Basic " + base64::encode(String(Settings.influx_user) + ":" + String(Settings.influx_pass)));
+    client.println("Connection: close");
+    client.println("Content-length: " + String(postVars.length()));
+    client.println();
+    client.println(postVars);
+    client.stop();
   }
-  client.println("POST /write?db=" + String(Settings.influx_db) + " HTTP/1.1");
-  client.println("Host: " + String(Settings.influx_host));
-  client.println("Authorization: Basic " + base64::encode(String(Settings.influx_user) + ":" + String(Settings.influx_pass)));
-  client.println("Connection: close");
-  client.println("Content-length: " + String(postVars.length()));
-  client.println();
-  client.println(postVars);
-  client.stop();
 }
