@@ -14,8 +14,7 @@
 #include <FS.h>
 #include <SPI.h>
 #include <SPIFFS.h>
-//#include "esp_vfs.h"
-//#include "esp_vfs_fat.h"
+#include <rom/rtc.h>
 #include "esp_log.h"
 #include <ctype.h>
 #include <WiFi.h>
@@ -59,8 +58,8 @@ SettingsStruct Settings;
 
 String getFileChecksum( String );
 
-static float version              = 1.80;
-static String verstr              = "Version 1.80";   //Make sure we can grep version from binary image
+static float version              = 1.81;
+static String verstr              = "Version 1.81";   //Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -275,7 +274,8 @@ void setup() {
   delay(100);
   WebServerInit();
 
-  callHome();  // get settings and current software version from server
+  reportResetReason();      // report to the backend what caused the reset
+  callHome();               // get settings and current software version from server
   addLog(LOG_LEVEL_INFO, "CORE : Setup done. Starting main loop");
 
 }

@@ -1,3 +1,11 @@
+void reportResetReason() {
+  if (Settings.upload_get_ssl) {
+   httpsGet("/api/reboot/", "&ver=" + String(version) + "&Rr0=" + String(rtc_get_reset_reason(0)) + "&Rr1=" + String(rtc_get_reset_reason(1)));
+  } else {
+   httpGet("/api/reboot/", "&ver=" + String(version) + "&Rr0=" + String(rtc_get_reset_reason(0)) + "&Rr1=" + String(rtc_get_reset_reason(1)));
+  }
+}
+
 void callHome() {
   if (WiFi.status() != WL_CONNECTED) {
     addLog(LOG_LEVEL_ERROR, "WEBCL: Not calling home: Not connected to WiFi");
@@ -6,9 +14,9 @@ void callHome() {
   addLog(LOG_LEVEL_INFO, "WEBCL: Calling home");
   String cfgData;
   if (Settings.upload_get_ssl) {
-    cfgData = httpsGet("/api/callhome/", "&ver=" + String(version) + "&uptime=" + String(millis() / 1000) + "&free=" + String(system_get_free_heap_size()) + "&rssi=" + getWiFiStrength(10) + "&ip=" + formatIP(WiFi.localIP()), Settings.upload_get_port);
+    cfgData = httpsGet("/api/callhome/", "&uptime=" + String(millis() / 1000) + "&free=" + String(system_get_free_heap_size()) + "&rssi=" + getWiFiStrength(10) + "&ip=" + formatIP(WiFi.localIP()), Settings.upload_get_port);
   } else {
-    cfgData = httpGet("/api/callhome/", "&ver=" + String(version) + "&uptime=" + String(millis() / 1000) + "&free=" + String(system_get_free_heap_size()) + "&rssi=" + getWiFiStrength(10) + "&ip=" + formatIP(WiFi.localIP()), Settings.upload_get_port);
+    cfgData = httpGet("/api/callhome/", "&uptime=" + String(millis() / 1000) + "&free=" + String(system_get_free_heap_size()) + "&rssi=" + getWiFiStrength(10) + "&ip=" + formatIP(WiFi.localIP()), Settings.upload_get_port);
   }
   String returnValue;
   bool settingsChanged = 0;
