@@ -58,8 +58,8 @@ SettingsStruct Settings;
 
 String getFileChecksum( String );
 
-static float version              = 1.81;
-static String verstr              = "Version 1.81";   //Make sure we can grep version from binary image
+static float version              = 1.82;
+static String verstr              = "Version 1.82";   //Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2

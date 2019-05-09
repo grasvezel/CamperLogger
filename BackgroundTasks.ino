@@ -58,6 +58,11 @@ void runBackgroundTasks() {
     inventory += "\n";
   }
 
+  if(GPS_present) {
+    inventory += "GPS module detected";
+    inventory += "\n";
+  }
+
   nr_of_temp_sensors = 0;
   for (int i = 0; i < 10; i++) {
   vTaskDelay(10 / portTICK_PERIOD_MS);

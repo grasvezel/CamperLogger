@@ -9,6 +9,7 @@ void readVEdirect(int device) {
   unsigned long vedirect_timeout = millis() + 4000L; //
 
   while (!block_end && !timeOutReached(vedirect_timeout)) {
+    vTaskDelay(10 / portTICK_PERIOD_MS); // needed to keep WDT from resetting the ESP
     while (SerialVE.available() > 0 && !timeOutReached(vedirect_timeout)) {
       vTaskDelay(10 / portTICK_PERIOD_MS); // needed to keep WDT from resetting the ESP
       character = SerialVE.read();
