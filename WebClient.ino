@@ -240,6 +240,7 @@ void uploadFile(String content, String type) {
 
 void influx_post(String var, String value, String field) {
   String postVars = String(Settings.influx_mn) + ",item=" + var + ",logger=" + String(chipMAC) + " " + field + "=" + value;
+  vTaskDelay(10 / portTICK_PERIOD_MS);
 
   if (Settings.influx_ssl) {
     WiFiClientSecure client;

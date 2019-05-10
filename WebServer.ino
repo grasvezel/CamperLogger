@@ -24,7 +24,6 @@ void handle_wificonfig() {
   String content;
   content = html_head;
   addLog(LOG_LEVEL_INFO, "Scanning for networks...");
-  delay(10);
   int n = WiFi.scanNetworks();
   addLog(LOG_LEVEL_INFO, "WEB  : Scan done, found " + String(n) + " networks.");
   if (n == 0) {
