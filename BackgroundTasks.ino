@@ -1,9 +1,20 @@
 void runBackgroundTasks() {
+  // pause background tasks during data upload.
+  while(pause_background_tasks) {
+    background_tasks_paused = 1;
+    delay(1000);
+    addLog(LOG_LEVEL_INFO, "BCKGR: Background tasks paused");
+  }
+  background_tasks_paused = 0;
+  
   // These tasks will run in the background on CPU0
 
   // In case something goes wrong, this buys us time to download a new image.
-  if (!MPPT_present) {
-    vTaskDelay(30000 / portTICK_PERIOD_MS);
+  if (firstbgrun) {
+    delay(10000);
+    addLog(LOG_LEVEL_INFO, "BCKGR: Delaying first background run");
+    delay(20000);
+    firstbgrun = 0;
   }
   // Read Victron BMV battary monitor
   if (read_ve_direct_bmv) {
@@ -77,5 +88,4 @@ void runBackgroundTasks() {
     inventory = "No devices detected";
   }
   inventory_complete = 1;
-
 }

@@ -25,6 +25,9 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
+static float version              = 1.88;
+static String verstr              = "Version 1.88";   //Make sure we can grep version from binary image
+
 // Changing this number wil reset all settings to default!
 #define CONFIG_FILE_VERSION 4
 
@@ -57,9 +60,6 @@ typedef struct SettingsStruct {
 SettingsStruct Settings;
 
 String getFileChecksum( String );
-
-static float version              = 1.87;
-static String verstr              = "Version 1.87";   //Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -169,12 +169,6 @@ bool   inventory_complete = 0;
 int    nr_of_temp_sensors = 0;
 bool   inventory_requested = 0;
 
-// Since we are going to multitask, we want to avoid posting
-// data to the server while the values are being read.
-// FIXME - NOT YET IMPLEMENTED
-bool pause_readings  = 0;
-bool readings_paused = 0;
-
 // We are only going to upload readings from connected devices.
 // These values will be set to 1 after the first valid reading
 // from the respective device is received.
@@ -215,7 +209,6 @@ ESP32WebServer WebServer(80);
 HardwareSerial SerialGPS(1);     // GPS input (NMEA)
 HardwareSerial SerialVE(2);      // VE direct connections
 
-// Background tasks. Not in use atm.
 void backgroundTasks(void * parameter) {
   for (;;) {
     runBackgroundTasks();
@@ -223,6 +216,11 @@ void backgroundTasks(void * parameter) {
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
+
+bool pause_background_tasks = 0;
+bool background_tasks_paused = 0;
+
+bool firstbgrun = 1;
 
 void setup() {
   pinMode(PIN_STATUS_LED, OUTPUT);
@@ -287,24 +285,34 @@ void loop() {
   // process incoming requests
   WebServer.handleClient();
 
+  // Upload non-GPS readins
   if (timerLog != 0 && timeOutReached(timerLog)) {
     timerLog = millis() + Settings.readings_upload_interval * 1000L;
-
-    // periodic tasks
+    pause_background_tasks = 1;
+    while(!background_tasks_paused) {
+      delay(100);
+    }
     addLog(LOG_LEVEL_INFO, "CORE : Uploading readings");
     digitalWrite(PIN_EXT_LED, HIGH);
     callHome();
     uploadGetData();
     uploadInfluxReadings();
     digitalWrite(PIN_EXT_LED, LOW);
+    pause_background_tasks = 0;
   }
 
+  // Upload GPS data
   if (timerGPS != 0 && timeOutReached(timerGPS)) {
     timerGPS = millis() + Settings.gps_upload_interval * 1000L;
+    pause_background_tasks = 1;
+    while(!background_tasks_paused) {
+      delay(100);
+    }
     addLog(LOG_LEVEL_INFO, "CORE : Uploading GPS data");
     digitalWrite(PIN_EXT_LED, HIGH);
     digitalWrite(PIN_EXT_LED, LOW);
     uploadInfluxGPS();
+    pause_background_tasks = 0;
   }
 
   // retry WiFi connection
