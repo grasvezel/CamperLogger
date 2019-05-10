@@ -60,7 +60,7 @@ void runBackgroundTasks() {
 
   if(GPS_present) {
     inventory += "GPS module detected";
-    inventory += "\n";
+    inventory += "\n\n";
   }
 
   nr_of_temp_sensors = 0;

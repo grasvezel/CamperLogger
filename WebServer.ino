@@ -115,7 +115,9 @@ void handle_bmv() {
   if (BMV_present) {
     content += "Last BMV readings:\n";
     content += "<pre>\n";
-    content += lastBlockBMV;
+    content += lastBlockBMV_1;
+    content += "\n";
+    content += lastBlockBMV_2;
     content += "</pre>";
   } else {
     content += "No BMV present";

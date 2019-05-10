@@ -58,8 +58,8 @@ SettingsStruct Settings;
 
 String getFileChecksum( String );
 
-static float version              = 1.86;
-static String verstr              = "Version 1.86";   //Make sure we can grep version from binary image
+static float version              = 1.87;
+static String verstr              = "Version 1.87";   //Make sure we can grep version from binary image
 
 #define LOG_LEVEL_ERROR             1
 #define LOG_LEVEL_INFO              2
@@ -161,7 +161,8 @@ struct readingsStruct {
 } readings;
 
 // DATA COLLECTION VARIABLES
-String lastBlockBMV = "";
+String lastBlockBMV_1 = "";
+String lastBlockBMV_2 = "";
 String lastBlockMPPT = "";
 String inventory = "";
 bool   inventory_complete = 0;

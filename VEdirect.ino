@@ -48,13 +48,13 @@ void readVEdirect(int device) {
                 addLog(LOG_LEVEL_INFO, "VICTR: Checksum OK reading device " + String(device));
               }
               if (device == DEVICE_BMV_B1) {
-                lastBlockBMV = thisBlock;
+                lastBlockBMV_1 = thisBlock;
                 BMV_present = 1;
                 readings.BMV_B1_ok = 1;
                 addLog(LOG_LEVEL_INFO, "VICTR: Checksum OK reading device " + String(device));
               }
               if (device == DEVICE_BMV_B2) {
-                lastBlockBMV += thisBlock;
+                lastBlockBMV_2 = thisBlock;
                 BMV_present = 1;
                 readings.BMV_B2_ok = 1;
                 addLog(LOG_LEVEL_INFO, "VICTR: Checksum OK reading device " + String(device));
@@ -69,12 +69,12 @@ void readVEdirect(int device) {
               if (device == DEVICE_BMV_B1) {
                 readings.BMV_B1_ok = 0;
                 addLog(LOG_LEVEL_ERROR, "VICTR: Checksum error reading device " + String(device));
-                lastBlockBMV = thisBlock + "Invalid checksum BMV block 1";
+                lastBlockBMV_1 = thisBlock + "Invalid checksum BMV block 1";
               }
               if (device == DEVICE_BMV_B2) {
                 readings.BMV_B2_ok = 0;
                 addLog(LOG_LEVEL_ERROR, "VICTR: Checksum error reading device " + String(device));
-                lastBlockBMV = thisBlock + "Invalid checksum BMV block 2";
+                lastBlockBMV_2 = thisBlock + "Invalid checksum BMV block 2";
               }
             }
           }
