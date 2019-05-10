@@ -94,9 +94,7 @@ String getGPSsentence() {
   String sentence = "";
   unsigned long timeout = millis() + 2000L;
   while (timeout > millis()) {
-    vTaskDelay(10 / portTICK_PERIOD_MS); // needed to keep WDT from resetting the ESP
     if (SerialGPS.available()) {
-      vTaskDelay(10 / portTICK_PERIOD_MS); // needed to keep WDT from resetting the ESP
       sentence += char(SerialGPS.read());
       if (!sentence.startsWith("$")) {
         sentence = "";
