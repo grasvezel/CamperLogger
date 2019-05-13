@@ -72,6 +72,7 @@ void uploadInfluxReadings() {
 
 void uploadGetData() {
   if (inventory_requested && inventory_complete) {
+    addLog(LOG_LEVEL_DEBUG, "DATA : Uploading inventory: " + inventory);
     uploadFile(inventory, "inventory");
     inventory_complete = 0;
     inventory_requested = 0;

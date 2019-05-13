@@ -1,4 +1,5 @@
 void readTemperatureSensors() {
+  addLog(LOG_LEVEL_INFO, "TEMP : Reading temperature sensors");
   DallasTemperature sensors(&oneWire);
   sensors.requestTemperatures(); // Send the command to get temperatures
   for (int sensorNr = 0; sensorNr < 10; sensorNr++) {

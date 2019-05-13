@@ -2,8 +2,8 @@ void runBackgroundTasks() {
   // pause background tasks during data upload.
   while(pause_background_tasks) {
     background_tasks_paused = 1;
-    delay(1000);
     addLog(LOG_LEVEL_INFO, "BCKGR: Background tasks paused");
+    delay(1000);
   }
   background_tasks_paused = 0;
   
@@ -52,9 +52,10 @@ void runBackgroundTasks() {
   vTaskDelay(10 / portTICK_PERIOD_MS);
   readTankLevelSensor();
 
-  // Now that we have read all devices, the inventory list is complete.
+  // Now that we have read all devices, build inventory list
+  inventory = "";
   if(readings.BMV_PID != "") {
-    inventory  = "VE.direct port 1:\n" + getVictronDeviceByPID(readings.BMV_PID)  + " (PID " + readings.BMV_PID  + ")\n";
+    inventory += "VE.direct port 1:\n" + getVictronDeviceByPID(readings.BMV_PID)  + " (PID " + readings.BMV_PID  + ")\n";
     if(readings.BMV_serial != "") {
       inventory += "Serial number: " + readings.BMV_serial  + "\n";
     }
@@ -82,7 +83,7 @@ void runBackgroundTasks() {
     }
   }
   if(nr_of_temp_sensors > 0) {
-    inventory += "Number of 1-Wire temperature sensors: " + String(nr_of_temp_sensors) + "\n";
+    inventory += String(nr_of_temp_sensors) + " 1Wrire temperature sensor(s)\n";
   }
   if (inventory.length() == 0) {
     inventory = "No devices detected";
