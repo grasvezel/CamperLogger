@@ -25,8 +25,8 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.89;
-static String verstr              = "Version 1.89";   //Make sure we can grep version from binary image
+static float version              = 1.90;
+static String verstr              = "Version 1.90";   //Make sure we can grep version from binary image
 
 // Changing this number wil reset all settings to default!
 #define CONFIG_FILE_VERSION 4
@@ -321,5 +321,5 @@ void loop() {
     WifiConnect(3);
     nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
   }
-
+  delay(100);
 }
