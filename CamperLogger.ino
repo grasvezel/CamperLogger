@@ -25,8 +25,8 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.902;
-static String verstr              = "Version 1.902";   //Make sure we can grep version from binary image
+static float version              = 1.903;
+static String verstr              = "Version 1.903";   //Make sure we can grep version from binary image
 
 // Changing this number wil reset all settings to default!
 #define CONFIG_FILE_VERSION 4
@@ -212,8 +212,6 @@ HardwareSerial SerialVE(2);      // VE direct connections
 void backgroundTasks(void * parameter) {
   for (;;) {
     runBackgroundTasks();
-    // 10ms delay to avoid WDT being triggered
-    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -243,7 +241,7 @@ void setup() {
     NULL,             // Parameter
     1,                // priority
     &BackgroundTask,  // Task handle
-    0);               // core
+    1);               // core
 
   Serial.begin(115200);
   SerialGPS.begin(9600, SERIAL_7E1, GPS_PIN, -1, false);

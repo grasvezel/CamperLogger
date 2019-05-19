@@ -1,14 +1,17 @@
 void runBackgroundTasks() {
+  // These tasks will run in the background.
+  
   // pause background tasks during data upload.
   while(pause_background_tasks) {
     background_tasks_paused = 1;
     addLog(LOG_LEVEL_INFO, "BCKGR: Background tasks paused");
     delay(1000);
   }
-  background_tasks_paused = 0;
+  if(background_tasks_paused == 1) {
+    addLog(LOG_LEVEL_INFO, "BCKGR: Resuming background tasks");
+    background_tasks_paused = 0;
+  }
   
-  // These tasks will run in the background on CPU0
-
   // In case something goes wrong, this buys us time to download a new image.
   if (firstbgrun) {
     delay(10000);
@@ -26,7 +29,6 @@ void runBackgroundTasks() {
     vTaskDelay(10 / portTICK_PERIOD_MS);
     readVEdirect(DEVICE_BMV_B2);
 
-    SerialVE.flush(); // we don't write to serial, his is an attempt to keep the WDT from kicking in.
     SerialVE.end();
     handleCharging();
     vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -40,7 +42,6 @@ void runBackgroundTasks() {
     readVEdirect(DEVICE_MPPT);
 
     vTaskDelay(10 / portTICK_PERIOD_MS);
-    SerialVE.flush(); // we don't write to serial, his is an attempt to keep the WDT from kicking in.
     SerialVE.end();
   }
 
@@ -48,7 +49,6 @@ void runBackgroundTasks() {
   readGPS();
 
   vTaskDelay(10 / portTICK_PERIOD_MS);
-
   readTemperatureSensors();
 
   vTaskDelay(10 / portTICK_PERIOD_MS);
