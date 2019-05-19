@@ -1,8 +1,8 @@
 void reportResetReason() {
   if (Settings.upload_get_ssl) {
-   httpsGet("/api/reboot/", "&ver=" + String(version) + "&Rr0=" + String(rtc_get_reset_reason(0)) + "&Rr1=" + String(rtc_get_reset_reason(1)));
+   httpsGet("/api/reboot/", "&ver=" + String(version,3) + "&Rr0=" + String(rtc_get_reset_reason(0)) + "&Rr1=" + String(rtc_get_reset_reason(1)));
   } else {
-   httpGet("/api/reboot/", "&ver=" + String(version) + "&Rr0=" + String(rtc_get_reset_reason(0)) + "&Rr1=" + String(rtc_get_reset_reason(1)));
+   httpGet("/api/reboot/", "&ver=" + String(version,3) + "&Rr0=" + String(rtc_get_reset_reason(0)) + "&Rr1=" + String(rtc_get_reset_reason(1)));
   }
 }
 
@@ -70,7 +70,7 @@ void callHome() {
       addLog(LOG_LEVEL_INFO, "OTA  : No software available from server");
       return;
     }
-    addLog(LOG_LEVEL_DEBUG, "OTA  : SW version available on server: " + String(srvVer));
+    addLog(LOG_LEVEL_DEBUG, "OTA  : SW version available on server: " + String(srvVer,3));
     if (version == srvVer) {
       addLog(LOG_LEVEL_INFO, "OTA  : SW version up to date");
     }

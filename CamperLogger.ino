@@ -25,8 +25,8 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.90;
-static String verstr              = "Version 1.90";   //Make sure we can grep version from binary image
+static float version              = 1.902;
+static String verstr              = "Version 1.902";   //Make sure we can grep version from binary image
 
 // Changing this number wil reset all settings to default!
 #define CONFIG_FILE_VERSION 4
@@ -248,7 +248,7 @@ void setup() {
   Serial.begin(115200);
   SerialGPS.begin(9600, SERIAL_7E1, GPS_PIN, -1, false);
 
-  addLog(LOG_LEVEL_INFO, "CORE : Version " + String(version) + " starting");
+  addLog(LOG_LEVEL_INFO, "CORE : Version " + String(version,3) + " starting");
   addLog(LOG_LEVEL_DEBUG, "CORE : Size of stettins struct: " + String(sizeof(struct SettingsStruct)));
   for (byte x = 0; x < 16; x++)
     ledChannelPin[x] = -1;

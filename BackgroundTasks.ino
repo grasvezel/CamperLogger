@@ -26,6 +26,7 @@ void runBackgroundTasks() {
     vTaskDelay(10 / portTICK_PERIOD_MS);
     readVEdirect(DEVICE_BMV_B2);
 
+    SerialVE.flush(); // we don't write to serial, his is an attempt to keep the WDT from kicking in.
     SerialVE.end();
     handleCharging();
     vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -39,6 +40,7 @@ void runBackgroundTasks() {
     readVEdirect(DEVICE_MPPT);
 
     vTaskDelay(10 / portTICK_PERIOD_MS);
+    SerialVE.flush(); // we don't write to serial, his is an attempt to keep the WDT from kicking in.
     SerialVE.end();
   }
 
