@@ -257,7 +257,6 @@ void setup() {
 
   fileSystemCheck();
 
-  addLog(LOG_LEVEL_INFO, "FILE : Loading settings");
   LoadSettings();
 
   addLog(LOG_LEVEL_INFO, "CORE : DST setting: " + String(Settings.DST));

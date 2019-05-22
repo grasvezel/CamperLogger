@@ -84,6 +84,7 @@ String SaveSettings(void) {
   Load settings from SPIFFS
   \*********************************************************************************************/
 String LoadSettings() {
+  addLog(LOG_LEVEL_INFO, "FILE : Loading settings");
   String error;
   error = LoadFromFile((char*)FILE_SETTINGS, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if (error.length() != 0 || Settings.config_file_version != CONFIG_FILE_VERSION) {
