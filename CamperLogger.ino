@@ -25,8 +25,8 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.903;
-static String verstr              = "Version 1.903";   //Make sure we can grep version from binary image
+static float version              = 1.904;
+static String verstr              = "Version 1.904";   //Make sure we can grep version from binary image
 
 // Changing this number wil reset all settings to default!
 #define CONFIG_FILE_VERSION 4

@@ -3,8 +3,8 @@
 // measured by the BMV) rises above chargeOnAt and off again if the voltage
 // drops below chargeOffAt. suggested values are 27.40 and 26.40 respectively.
 
-float chargeOnAt  = 27.40;
-float chargeOffAt = 26.40;
+float chargeOnAt  = 26.50;
+float chargeOffAt = 26.00;
 
 void handleCharging() {
   if(readings.BMV_Vbatt >= chargeOnAt) {
