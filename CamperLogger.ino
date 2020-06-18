@@ -7,8 +7,8 @@
     RELAY 1           GPIO 16
     RELAY 2           GPIO 21
     Water tank sensor GPIO 33
-    Gas tank sensor 2 GPIO 25
-    Not used          GPIO 17
+    Gas tank sensor 2 GPIO 17
+    Not used          GPIO 25
 */
 
 // Partition scheme: Minimal SPIFFS (1.9MB APP with OTA)/190KB SPIFFS)
@@ -27,8 +27,8 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.905;
-static String verstr              = "Version 1.905";   //Make sure we can grep version from binary image
+static float version              = 1.906;
+static String verstr              = "Version 1.906";   //Make sure we can grep version from binary image
 
 // Changing this number wil reset all settings to default!
 #define CONFIG_FILE_VERSION 4
@@ -95,7 +95,7 @@ byte logLevel                     = 4;                // not a #define, logLevel
 #define VE_DIRECT_PIN_1             32                // opto isolated input (RS-232 TTL)
 #define VE_DIRECT_PIN_2             36                // opto isolated input (RS-232 TTL)
 #define WATER_LEVEL_SENSOR_PIN      33                // Analog water tank level sensor input
-#define GAS_LEVEL_SENSOR_PIN        25                // Analog gas tank level sensor input
+#define GAS_LEVEL_SENSOR_PIN        17                // Analog gas tank level sensor input
 
 #define DEVICE_BMV_B1               1                 // Block one of the BMV output
 #define DEVICE_BMV_B2               2                 // Block two of the BMV output
