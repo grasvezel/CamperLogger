@@ -1,12 +1,14 @@
 /*
-    1-WIRE        GPIO 26
-    GPS           GPIO 27
-    VE.Direct 1   GPIO 32
-    VE.Direct 2   GPIO 36
-    LED           GPIO 13
-    RELAY 1       GPIO 16
-    RELAY 2       GPIO 21
-    Tank sensor   GPIO 25
+    1-WIRE            GPIO 26
+    GPS               GPIO 27
+    VE.Direct 1       GPIO 32
+    VE.Direct 2       GPIO 36
+    LED               GPIO 13
+    RELAY 1           GPIO 16
+    RELAY 2           GPIO 21
+    Water tank sensor GPIO 33
+    Gas tank sensor 2 GPIO 25
+    Not used          GPIO 17
 */
 
 // Partition scheme: Minimal SPIFFS (1.9MB APP with OTA)/190KB SPIFFS)
@@ -25,8 +27,8 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.904;
-static String verstr              = "Version 1.904";   //Make sure we can grep version from binary image
+static float version              = 1.905;
+static String verstr              = "Version 1.905";   //Make sure we can grep version from binary image
 
 // Changing this number wil reset all settings to default!
 #define CONFIG_FILE_VERSION 4
@@ -49,7 +51,7 @@ typedef struct SettingsStruct {
   bool          influx_write_bmv;
   bool          influx_write_mppt;
   bool          influx_write_temp;
-  bool          influx_write_tank;
+  bool          influx_write_water;
   bool          influx_write_geohash;
   bool          influx_write_coords;
   bool          influx_write_speed_heading;
@@ -92,7 +94,8 @@ byte logLevel                     = 4;                // not a #define, logLevel
 #define RELAY_PIN_2                 21                // 
 #define VE_DIRECT_PIN_1             32                // opto isolated input (RS-232 TTL)
 #define VE_DIRECT_PIN_2             36                // opto isolated input (RS-232 TTL)
-#define TANK_LEVEL_SENSOR_PIN       33                // Analog tank level sensor input
+#define WATER_LEVEL_SENSOR_PIN      33                // Analog water tank level sensor input
+#define GAS_LEVEL_SENSOR_PIN        25                // Analog gas tank level sensor input
 
 #define DEVICE_BMV_B1               1                 // Block one of the BMV output
 #define DEVICE_BMV_B2               2                 // Block two of the BMV output
@@ -154,7 +157,10 @@ struct readingsStruct {
   String GPS_geohash;// Geohash
 
   // water tank
-  int   Tank_level;  // Water tank level (%)
+  int   Water_level;  // Water tank level (%)
+
+  // gas tank
+  int   Gas_level;    // Gas tank level (%)
 
   // 12v charger
   int   Charger;  // 12v charger on
@@ -181,7 +187,7 @@ bool read_ve_direct_bmv  = 1;    // read BMV or skip it?
 bool read_ve_direct_mppt = 1;    // read MPPT or skip it?
 bool read_temp           = 1;    // read temperature sensors or skip it?
 bool read_gps            = 1;    // read GPS data or skip it?
-bool read_tank_level     = 1;    // read tank level sensor or skip it?
+bool read_water_level     = 1;    // read tank level sensor or skip it?
 
 String Fcrc;
 uint8_t ledChannelPin[16];
@@ -228,7 +234,8 @@ void setup() {
   pinMode(RELAY_PIN_2, OUTPUT);
   pinMode(VE_DIRECT_PIN_1, INPUT);
   pinMode(VE_DIRECT_PIN_2, INPUT);
-  pinMode(TANK_LEVEL_SENSOR_PIN, INPUT);
+  pinMode(WATER_LEVEL_SENSOR_PIN, INPUT);
+  pinMode(GAS_LEVEL_SENSOR_PIN, INPUT);
 
   digitalWrite(PIN_EXT_LED, HIGH);
   delay(500);

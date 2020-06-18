@@ -57,8 +57,8 @@ void uploadInfluxReadings() {
     influx_post("BLDD",   String(readings.BMV_LDD));
   }
 
-  if (Settings.influx_write_tank) {
-    influx_post("Tank", String(readings.Tank_level));
+  if (Settings.influx_write_water) {
+    influx_post("Tank", String(readings.Water_level));
   }
 
   if (Settings.influx_write_temp) {
@@ -91,7 +91,8 @@ void uploadGetData() {
     }
   }
 
-  request += "&Tnk=" + String(readings.Tank_level);
+  request += "&Tnk=" + String(readings.Water_level);
+  request += "&Gas=" + String(readings.Gas_level);
 
   if (readings.BMV_B1_ok) {
     // These readings are in the first block of the BMV output

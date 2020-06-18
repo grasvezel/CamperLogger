@@ -52,7 +52,8 @@ void runBackgroundTasks() {
   readTemperatureSensors();
 
   vTaskDelay(10 / portTICK_PERIOD_MS);
-  readTankLevelSensor();
+  readWaterTankLevelSensor();
+  readGasTankLevelSensor();
 
   // Now that we have read all devices, build inventory list
   inventory = "";

@@ -106,7 +106,7 @@ String LoadSettings() {
     Settings.influx_write_bmv            = 1;
     Settings.influx_write_mppt           = 1;
     Settings.influx_write_temp           = 1;
-    Settings.influx_write_tank           = 1;
+    Settings.influx_write_water          = 1;
     Settings.influx_write_geohash        = 1;
     Settings.influx_write_coords         = 1;
     Settings.influx_write_speed_heading  = 1;

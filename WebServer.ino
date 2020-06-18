@@ -139,8 +139,8 @@ void handle_sensors() {
       content += "Sensor " + String(i) + ": " + String(readings.temp[i]) + "&deg;C<br>";
     }
   }
-  content += "<h2>Tank sensor:</h2>";
-  content += String(readings.Tank_level) + "%<br>";
+  content += "<h2>Water tank sensor:</h2>";
+  content += String(readings.Water_level) + "%<br>";
   WebServer.send(200, "text/html", content);
   if (timerAPoff != 0)
     timerAPoff = millis() + 10000L;
@@ -191,8 +191,8 @@ void handle_cfg() {
     content += " checked";
   content += " name=\"idb_temp\" value=\"1\"></td></tr>";
 
-  content += "<tr><td>Tank level</td><td><input type=\"checkbox\"";
-  if (Settings.influx_write_tank)
+  content += "<tr><td>Water level</td><td><input type=\"checkbox\"";
+  if (Settings.influx_write_water)
     content += " checked";
   content += " name=\"idb_tank\" value=\"1\"></td></tr>";
 
@@ -252,7 +252,7 @@ void handle_savecfg() {
   Settings.influx_write_bmv = 0;
   Settings.influx_write_mppt = 0;
   Settings.influx_write_temp = 0;
-  Settings.influx_write_tank = 0;
+  Settings.influx_write_water = 0;
   Settings.influx_write_geohash = 0;
   Settings.influx_write_coords = 0;
   Settings.influx_write_speed_heading = 0;
@@ -277,7 +277,7 @@ void handle_savecfg() {
       Settings.influx_write_temp = 1;
     }
     if (WebServer.argName(i) == "idb_tank" && WebServer.arg(i) == "1") {
-      Settings.influx_write_tank = 1;
+      Settings.influx_write_water = 1;
     }
     if (WebServer.argName(i) == "idb_geohash" && WebServer.arg(i) == "1") {
       Settings.influx_write_geohash = 1;
@@ -368,8 +368,8 @@ void handle_json() {
   content += "\"heading\":\"" + String(readings.GPS_heading) + "\",";
   content += "\"geohash\":\"" + String(readings.GPS_geohash) + "\"";
   content += "},"; 
-  content += "\"tank\":{";
-  content += "\"level\":\"" + String(readings.Tank_level) + "\"";
+  content += "\"water\":{";
+  content += "\"level\":\"" + String(readings.Water_level) + "\"";
   content += "},"; 
   content += "\"temp\":{";
   for(int i=0;i<10;i++) {
