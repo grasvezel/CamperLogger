@@ -7,8 +7,8 @@
     RELAY 1           GPIO 16
     RELAY 2           GPIO 21
     Water tank sensor GPIO 33
-    Gas tank sensor 2 GPIO 17
-    Not used          GPIO 25
+    Gas tank sensor   GPIO 39 NOTE: Requires a jumper wire, connector is wired to pin 25!
+    Not used          GPIO 17
 */
 
 // Partition scheme: Minimal SPIFFS (1.9MB APP with OTA)/190KB SPIFFS)
@@ -27,8 +27,8 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.906;
-static String verstr              = "Version 1.906";   //Make sure we can grep version from binary image
+static float version              = 1.910;
+static String verstr              = "Version 1.910";   //Make sure we can grep version from binary image
 
 // Changing this number wil reset all settings to default!
 #define CONFIG_FILE_VERSION 4
@@ -95,7 +95,7 @@ byte logLevel                     = 4;                // not a #define, logLevel
 #define VE_DIRECT_PIN_1             32                // opto isolated input (RS-232 TTL)
 #define VE_DIRECT_PIN_2             36                // opto isolated input (RS-232 TTL)
 #define WATER_LEVEL_SENSOR_PIN      33                // Analog water tank level sensor input
-#define GAS_LEVEL_SENSOR_PIN        17                // Analog gas tank level sensor input
+#define GAS_LEVEL_SENSOR_PIN        39                // Analog gas tank level sensor input
 
 #define DEVICE_BMV_B1               1                 // Block one of the BMV output
 #define DEVICE_BMV_B2               2                 // Block two of the BMV output
@@ -236,7 +236,8 @@ void setup() {
   pinMode(VE_DIRECT_PIN_2, INPUT);
   pinMode(WATER_LEVEL_SENSOR_PIN, INPUT);
   pinMode(GAS_LEVEL_SENSOR_PIN, INPUT);
-
+  pinMode(25, INPUT); // GPIO25 is parallel wired to GPIO39 because we can not use ADC2!
+  
   digitalWrite(PIN_EXT_LED, HIGH);
   delay(500);
   digitalWrite(PIN_EXT_LED, LOW);

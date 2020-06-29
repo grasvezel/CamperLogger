@@ -76,5 +76,6 @@ void readGasTankLevelSensor() {
   for (int i = 0; i < loops; i++) {
     currenttanklevel += analogRead(GAS_LEVEL_SENSOR_PIN);
   }
-  readings.Gas_level = currenttanklevel / loops;
+  float gas_level = currenttanklevel / loops / 15.75; // max reading (80%) is about 1260.
+  readings.Gas_level = (int) gas_level;
 }
