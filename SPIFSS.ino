@@ -84,9 +84,17 @@ String SaveSettings(void) {
   Load settings from SPIFFS
   \*********************************************************************************************/
 String LoadSettings() {
+  int settings_changed = 0;
   addLog(LOG_LEVEL_INFO, "FILE : Loading settings");
   String error;
   error = LoadFromFile((char*)FILE_SETTINGS, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
+  if(Settings.config_file_version == 4 && CONFIG_FILE_VERSION == 5) {
+    // upgrade config file version 4 to version 5
+    addLog(LOG_LEVEL_INFO, "FILE : Config file upgrade 4->5");
+    Settings.influx_write_gas            = 1;
+    Settings.config_file_version         = 5;
+    settings_changed = 1;
+  }
   if (error.length() != 0 || Settings.config_file_version != CONFIG_FILE_VERSION) {
     addLog(LOG_LEVEL_INFO, "FS   : Overwriting settings file");
     Settings.config_file_version         = CONFIG_FILE_VERSION;
@@ -118,6 +126,9 @@ String LoadSettings() {
     error += "\n";
   }
   error += (LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(struct SecurityStruct)));
+  if(settings_changed) {
+    SaveSettings();
+  }
   return (error);
 }
 

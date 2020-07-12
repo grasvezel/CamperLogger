@@ -139,8 +139,9 @@ void handle_sensors() {
       content += "Sensor " + String(i) + ": " + String(readings.temp[i]) + "&deg;C<br>";
     }
   }
-  content += "<h2>Water tank sensor:</h2>";
-  content += String(readings.Water_level) + "%<br>";
+  content += "<h2>Tank sensors:</h2>";
+  content += "Water tank " + String(readings.Water_level) + "%<br>";
+  content += "Gas tank " + String(readings.Gas_level) + "%<br>";
   WebServer.send(200, "text/html", content);
   if (timerAPoff != 0)
     timerAPoff = millis() + 10000L;
@@ -371,13 +372,20 @@ void handle_json() {
   content += "\"water\":{";
   content += "\"level\":\"" + String(readings.Water_level) + "\"";
   content += "},"; 
+  content += "\"gas\":{";
+  content += "\"level\":\"" + String(readings.Gas_level) + "\"";
+  content += "},"; 
   content += "\"temp\":{";
+  int tempsensorcount = 0;
   for(int i=0;i<10;i++) {
     if (readings.temp[i] != -127) {
+      tempsensorcount++;
       content += "\"temp" + String(i)+ "\":\"" + String(readings.temp[i]) + "\",";
     }
   }
-  content = content.substring(0, content.length() -1);
+  if(tempsensorcount > 0) {
+    content = content.substring(0, content.length() -1);
+  }
   content += "}"; 
   content += "}"; 
   WebServer.send(200, "application/json", content);

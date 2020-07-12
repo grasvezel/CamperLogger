@@ -1,0 +1,19 @@
+Version 1.912
+
+Fixed a bug that cuased the WiFi settings to be cleared when upgrading to version 1.911
+
+Version 1.911
+
+Started this changelog file
+
+Fixed a bug where json output would be invalid if there were no temperature sensors connected
+
+Added gas (propane) tank level to json output, 'sensors' page, and influxdb upload.
+
+Added 'upload gas level to influxdb' config option.
+
+Changed config file format version to 5.
+
+Implemented config file format update from 4 to 5 without loss of configuration data.
+
+Updated README.md

@@ -61,6 +61,10 @@ void uploadInfluxReadings() {
     influx_post("Tank", String(readings.Water_level));
   }
 
+  if (Settings.influx_write_gas) {
+    influx_post("Gas", String(readings.Gas_level));
+  }
+
   if (Settings.influx_write_temp) {
     for (int i = 0; i < 10; i++) {
       if (readings.temp[i] != -127) {

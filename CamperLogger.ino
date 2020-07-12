@@ -27,11 +27,11 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.910;
-static String verstr              = "Version 1.910";   //Make sure we can grep version from binary image
+static float version              = 1.912;
+static String verstr              = "Version 1.912";   //Make sure we can grep version from binary image
 
-// Changing this number wil reset all settings to default!
-#define CONFIG_FILE_VERSION 4
+// Changing this number may reset all settings to default!
+#define CONFIG_FILE_VERSION 5
 
 typedef struct SettingsStruct {
   int           config_file_version;
@@ -57,6 +57,8 @@ typedef struct SettingsStruct {
   bool          influx_write_speed_heading;
   int           gps_upload_interval;
   int           readings_upload_interval;
+  // new in config file version 5:
+  bool          influx_write_gas;
 };
 
 SettingsStruct Settings;
