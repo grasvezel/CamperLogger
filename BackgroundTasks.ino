@@ -5,8 +5,12 @@ void runBackgroundTasks() {
   while(pause_background_tasks) {
     background_tasks_paused = 1;
     addLog(LOG_LEVEL_INFO, "BCKGR: Background tasks paused");
-    delay(1000);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
+//  while(WiFi.status() != WL_CONNECTED) {
+//    addLog(LOG_LEVEL_INFO, "BCKGR: Not running background tasks, WiFi not connected.");
+//    vTaskDelay(5000 / portTICK_PERIOD_MS);
+//  }
   if(background_tasks_paused == 1) {
     addLog(LOG_LEVEL_INFO, "BCKGR: Resuming background tasks");
     background_tasks_paused = 0;
@@ -14,9 +18,9 @@ void runBackgroundTasks() {
   
   // In case something goes wrong, this buys us time to download a new image.
   if (firstbgrun) {
-    delay(10000);
+    vTaskDelay(10000 / portTICK_PERIOD_MS);
     addLog(LOG_LEVEL_INFO, "BCKGR: Delaying first background run");
-    delay(20000);
+    vTaskDelay(20000 / portTICK_PERIOD_MS);
     firstbgrun = 0;
   }
   // Read Victron BMV battary monitor

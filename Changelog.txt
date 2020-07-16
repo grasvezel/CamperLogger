@@ -1,3 +1,9 @@
+Version 1.913
+Fixed a bug causing the logger to try to connect to external servers even if WiFi is not connected.
+In AP mode, DHCP no longer assigns a gateway IP address. This causes cellphones to use mobile data even when connected to the logger.
+Moved background tasks from core1 to core0. 
+Made some inprovements to SoftAP on/off logic.
+
 Version 1.912
 
 Fixed a bug that cuased the WiFi settings to be cleared when upgrading to version 1.911

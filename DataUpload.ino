@@ -5,13 +5,16 @@ void uploadInfluxGPS() {
   if (GPS_present) {
     if (Settings.influx_write_geohash) {
       // strings must be quoted
+      addLog(LOG_LEVEL_INFO, "DATA : Writing geohash to influxdb");
       influx_post("Geohash", "\"" + String(readings.GPS_geohash) + "\"", "geo");
     }
     if (Settings.influx_write_coords) {
+      addLog(LOG_LEVEL_INFO, "DATA : Writing GPS coordinates to influxdb");
       influx_post("lat", String(readings.GPS_lat_abs));
       influx_post("lon", String(readings.GPS_lon_abs));
     }
     if (Settings.influx_write_speed_heading) {
+      addLog(LOG_LEVEL_INFO, "DATA : Writing GPS speed & heading to influxdb");
       influx_post("speed", String(readings.GPS_speed));
       influx_post("heading", String(readings.GPS_heading));
     }

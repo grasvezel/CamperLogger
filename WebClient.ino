@@ -119,6 +119,7 @@ String urlOpen(String path, String query) {
 String httpsGet(String path, String query, int port) {
   if (WiFi.status() != WL_CONNECTED) {
     addLog(LOG_LEVEL_ERROR, "WEBCL: Not trying to connect: Not connected to WiFi");
+    return("");
   }
   WiFiClientSecure webclient;
   addLog(LOG_LEVEL_DEBUG, "WEBCL: Starting https request (" + path + ")" );
@@ -170,6 +171,7 @@ String httpsGet(String path, String query, int port) {
 String httpGet(String path, String query, int port) {
   if (WiFi.status() != WL_CONNECTED) {
     addLog(LOG_LEVEL_ERROR, "WEBCL: Not trying to connect: Not connected to WiFi");
+    return("");
   }
   WiFiClient webclient;
   addLog(LOG_LEVEL_DEBUG, "WEBCL: Starting https request (" + path + ")" );

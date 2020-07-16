@@ -8,11 +8,12 @@ String WifiGetAPssid() {
 // Set Wifi AP Mode config
 //********************************************************************************
 void WifiAPconfig() {
-  // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
-  // setup ssid for AP Mode when needed
+  WiFi.softAPConfig(apIP, apGW, apNM);
+  delay(100);
   WiFi.softAP(WifiGetAPssid().c_str(), DEFAULT_PASSWORD);
-  // We start in STA mode
-  WifiAPMode(false);
+  delay(100);
+  // We start in AP mode
+  WifiAPMode(true);
 
   String log("WIFI : AP Mode SSID will be ");
   log = log + WifiGetAPssid();
@@ -31,6 +32,8 @@ void WifiAPMode(boolean state) {
     if (!state) {
       WiFi.mode(WIFI_STA);
       addLog(LOG_LEVEL_INFO, F("WIFI : AP Mode disabled"));
+    } else {
+      addLog(LOG_LEVEL_INFO, F("WIFI : AP Mode already enabled"));
     }
   } else {
     //want to enable?
@@ -55,18 +58,15 @@ boolean WifiConnect(byte connectAttempts) {
   strncpy(hostname, WifiGetAPssid().c_str(), sizeof(hostname));
   WiFi.setHostname(hostname);
 
-  //try to connect to one of the access points
-  if (WifiConnectSSID(SecuritySettings.WifiSSID,  SecuritySettings.WifiKey,  connectAttempts) ||
-      WifiConnectSSID(SecuritySettings.WifiSSID2, SecuritySettings.WifiKey2, connectAttempts))
-  {
+  //try to connect to the ap
+  if (WifiConnectSSID(SecuritySettings.WifiSSID,  SecuritySettings.WifiKey,  connectAttempts)) {
     nextSyncTime = sysTime;
     now();
     return (true);
   }
 
   addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP!"));
-
-  //everything failed, activate AP mode (will deactivate automatically after a while if its connected again)
+  // Unable to connect to wifi. Enable soft AP.
   WifiAPMode(true);
 
   return (false);
@@ -157,21 +157,20 @@ int getWiFiStrength(int points){
 void updateAPstatus() {
   // turn off WiFi AP when timeout is reached
   if (timerAPoff != 0 && timeOutReached(timerAPoff)) {
-    addLog(LOG_LEVEL_INFO, "WIFI : AP timeout reached, switching off AP");
+    addLog(LOG_LEVEL_INFO, "WIFI : AP timeout reached");
     timerAPoff = 0;
     WifiAPMode(false);
   }
 
-  // if connection is lost and back, set timerAPoff to 10 seconds
-  if(WiFi.status() == WL_CONNECTED && timerAPoff == 0) {
-    WifiAPMode(false);
+  // not connected, set timerAPoff to 10 seconds
+  if(WiFi.status() != WL_CONNECTED && timerAPoff != 0) {
+    timerAPoff = millis() + 10000L;
   }
   
   // trun on WiFi AP if connection is lost
   if(WiFi.status() != WL_CONNECTED && !WifiIsAP()) {
-    timerAPoff = 0;
+    timerAPoff = millis() + 10000L;
     addLog(LOG_LEVEL_DEBUG, "WIFI : Connection lost, switching on WiFi AP");
     WifiAPMode(true);
   } 
 }
-

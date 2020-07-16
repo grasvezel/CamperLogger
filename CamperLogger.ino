@@ -27,8 +27,8 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.912;
-static String verstr              = "Version 1.912";   //Make sure we can grep version from binary image
+static float version              = 1.913;
+static String verstr              = "Version 1.913";   //Make sure we can grep version from binary image
 
 // Changing this number may reset all settings to default!
 #define CONFIG_FILE_VERSION 5
@@ -196,8 +196,11 @@ uint8_t ledChannelPin[16];
 uint8_t chipid[6];
 char chipMAC[12];
 IPAddress apIP(192, 168, 4, 1);
+IPAddress apNM(255,255,255,0);
+IPAddress apGW(0,0,0,0);
 
-unsigned long timerAPoff    = millis() + 10000L;
+//unsigned long timerAPoff    = millis() + 10000L;
+unsigned long timerAPoff    = 0;
 unsigned long timerLog      = millis() + 60000L;    // first upload after 60 seconds.
 unsigned long timerGPS      = millis() + 60000L;
 unsigned long nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
@@ -220,6 +223,7 @@ HardwareSerial SerialVE(2);      // VE direct connections
 void backgroundTasks(void * parameter) {
   for (;;) {
     runBackgroundTasks();
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
 
@@ -251,7 +255,7 @@ void setup() {
     NULL,             // Parameter
     1,                // priority
     &BackgroundTask,  // Task handle
-    1);               // core
+    0);               // core
 
   Serial.begin(115200);
   SerialGPS.begin(9600, SERIAL_7E1, GPS_PIN, -1, false);
@@ -274,8 +278,8 @@ void setup() {
   WifiAPconfig();
   WifiConnect(3);
   if (WiFi.status() == WL_CONNECTED) {
-    addLog(LOG_LEVEL_DEBUG, "WIFI : WiFi connected, disabling AP off timer");
-    timerAPoff = 0;
+    addLog(LOG_LEVEL_DEBUG, "WIFI : WiFi connected, disabling AP in 10 seconds");
+    timerAPoff = millis() + 10000L;
   }
   delay(100);
   WebServerInit();
@@ -292,8 +296,8 @@ void loop() {
   // process incoming requests
   WebServer.handleClient();
 
-  // Upload non-GPS readins
-  if (timerLog != 0 && timeOutReached(timerLog)) {
+  // Upload non-GPS readings
+  if (timerLog != 0 && timeOutReached(timerLog) && WiFi.status() == WL_CONNECTED) {
     timerLog = millis() + Settings.readings_upload_interval * 1000L;
     pause_background_tasks = 1;
     while(!background_tasks_paused) {
@@ -309,7 +313,7 @@ void loop() {
   }
 
   // Upload GPS data
-  if (timerGPS != 0 && timeOutReached(timerGPS)) {
+  if (timerGPS != 0 && timeOutReached(timerGPS) && WiFi.status() == WL_CONNECTED) {
     timerGPS = millis() + Settings.gps_upload_interval * 1000L;
     pause_background_tasks = 1;
     while(!background_tasks_paused) {
