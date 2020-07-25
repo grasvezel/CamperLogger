@@ -8,7 +8,9 @@ String WifiGetAPssid() {
 // Set Wifi AP Mode config
 //********************************************************************************
 void WifiAPconfig() {
-  WiFi.softAPConfig(apIP, apGW, apNM);
+//  Disabled softAPConfig as a workaround for this issue:
+//  https://github.com/espressif/arduino-esp32/issues/2025
+//  WiFi.softAPConfig(apIP, apGW, apNM);
   delay(100);
   WiFi.softAP(WifiGetAPssid().c_str(), DEFAULT_PASSWORD);
   delay(100);
