@@ -1,3 +1,10 @@
+Version 1.915
+Made VE.direct logging more descriptive.
+VE.direct timeout is now 4 seconds for BMV and 2 seconds for MPPT devices (was 4 seconds, regardless of the type)
+
+Version 1.914
+Implemented workaround for issue with Arduino core, causing the ESP to crash in some cases when a client connects to the ESP's soft AP.
+
 Version 1.913
 Fixed a bug causing the logger to try to connect to external servers even if WiFi is not connected.
 In AP mode, DHCP no longer assigns a gateway IP address. This causes cellphones to use mobile data even when connected to the logger.
