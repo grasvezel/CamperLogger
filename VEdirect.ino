@@ -4,9 +4,22 @@ void readVEdirect(int device) {
   String line = "";
   bool block_end = 0;
   bool in_block  = 0;
+  String devicename;
+  if(device == DEVICE_BMV_B1) {
+    devicename = "BMV (block 1)";
+  }
+  if(device == DEVICE_BMV_B2) {
+    devicename = "BMV (block 2)";
+  }
+  if(device == DEVICE_MPPT) {
+    devicename = "MPPT";
+  }
+  unsigned long vedirect_timeout = millis() + 2000L;
   // We get a block every second. However, a BMV sends different odd and even blocks.
   // This means it may take a little over two seconds to get to the block we want.
-  unsigned long vedirect_timeout = millis() + 4000L; //
+  if(device == DEVICE_BMV_B1 || device == DEVICE_BMV_B2) {
+    vedirect_timeout += 2000L;
+  }
 
   while (!block_end && !timeOutReached(vedirect_timeout)) {
     vTaskDelay(10 / portTICK_PERIOD_MS); // needed to keep WDT from resetting the ESP
@@ -45,35 +58,35 @@ void readVEdirect(int device) {
                 lastBlockMPPT = thisBlock;
                 MPPT_present = 1;
                 readings.MPPT_ok = 1;
-                addLog(LOG_LEVEL_INFO, "VICTR: Checksum OK reading device " + String(device));
+                addLog(LOG_LEVEL_INFO, "VICTR: Checksum OK reading " + devicename);
               }
               if (device == DEVICE_BMV_B1) {
                 lastBlockBMV_1 = thisBlock;
                 BMV_present = 1;
                 readings.BMV_B1_ok = 1;
-                addLog(LOG_LEVEL_INFO, "VICTR: Checksum OK reading device " + String(device));
+                addLog(LOG_LEVEL_INFO, "VICTR: Checksum OK reading " + devicename);
               }
               if (device == DEVICE_BMV_B2) {
                 lastBlockBMV_2 = thisBlock;
                 BMV_present = 1;
                 readings.BMV_B2_ok = 1;
-                addLog(LOG_LEVEL_INFO, "VICTR: Checksum OK reading device " + String(device));
+                addLog(LOG_LEVEL_INFO, "VICTR: Checksum OK reading " + devicename);
               }
               return;
             } else {
               if (device == DEVICE_MPPT) {
                 readings.MPPT_ok = 0;
-                addLog(LOG_LEVEL_ERROR, "VICTR: Checksum error reading device " + String(device));
+                addLog(LOG_LEVEL_ERROR, "VICTR: Checksum error reading " + devicename);
                 lastBlockMPPT = thisBlock + "Invalid checksum BMV block 1";
               }
               if (device == DEVICE_BMV_B1) {
                 readings.BMV_B1_ok = 0;
-                addLog(LOG_LEVEL_ERROR, "VICTR: Checksum error reading device " + String(device));
+                addLog(LOG_LEVEL_ERROR, "VICTR: Checksum error reading " + devicename);
                 lastBlockBMV_1 = thisBlock + "Invalid checksum BMV block 1";
               }
               if (device == DEVICE_BMV_B2) {
                 readings.BMV_B2_ok = 0;
-                addLog(LOG_LEVEL_ERROR, "VICTR: Checksum error reading device " + String(device));
+                addLog(LOG_LEVEL_ERROR, "VICTR: Checksum error reading " + devicename);
                 lastBlockBMV_2 = thisBlock + "Invalid checksum BMV block 2";
               }
             }
@@ -86,7 +99,7 @@ void readVEdirect(int device) {
   }
   if (!block_end) {
     // timeout reading MPPT or at least end of block not found
-    addLog(LOG_LEVEL_ERROR, "VICTR: Timeout reading VE.direct device " + String(device));
+    addLog(LOG_LEVEL_ERROR, "VICTR: Timeout reading VE.direct " + devicename);
     return;
   }
 }
