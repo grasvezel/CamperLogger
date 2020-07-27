@@ -1,3 +1,7 @@
+Version 1.916
+Added timeout on webclient
+Added restart if background tasks are paused for more than 60s
+
 Version 1.915
 Made VE.direct logging more descriptive.
 VE.direct timeout is now 4 seconds for BMV and 2 seconds for MPPT devices (was 4 seconds, regardless of the type)
