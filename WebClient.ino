@@ -122,6 +122,7 @@ String httpsGet(String path, String query, int port) {
     return("");
   }
   WiFiClientSecure webclient;
+  webclient.setTimeout(3);
   addLog(LOG_LEVEL_DEBUG, "WEBCL: Starting https request (" + path + ")" );
   unsigned int contentLength = 0;
   unsigned int contentPos = 0;
@@ -174,6 +175,7 @@ String httpGet(String path, String query, int port) {
     return("");
   }
   WiFiClient webclient;
+  webclient.setTimeout(3);
   addLog(LOG_LEVEL_DEBUG, "WEBCL: Starting https request (" + path + ")" );
   unsigned int contentLength = 0;
   unsigned int contentPos = 0;

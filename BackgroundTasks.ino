@@ -2,10 +2,16 @@ void runBackgroundTasks() {
   // These tasks will run in the background.
   
   // pause background tasks during data upload.
+  int paused_seconds = 0;
   while(pause_background_tasks) {
+    if(paused_seconds > 60) {
+      addLog(LOG_LEVEL_ERROR, "BACKGR: Background tasks paused for more than 60 seconds. Rebooting");
+      ESP.restart();
+    }
     background_tasks_paused = 1;
     addLog(LOG_LEVEL_INFO, "BCKGR: Background tasks paused");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+    paused_seconds++;
   }
 //  while(WiFi.status() != WL_CONNECTED) {
 //    addLog(LOG_LEVEL_INFO, "BCKGR: Not running background tasks, WiFi not connected.");
