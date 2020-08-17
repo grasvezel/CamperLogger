@@ -27,8 +27,8 @@
 #include <DallasTemperature.h>
 #include <base64.h>
 
-static float version              = 1.916;
-static String verstr              = "Version 1.916";   //Make sure we can grep version from binary image
+static float version              = 1.917;
+static String verstr              = "Version 1.917";   //Make sure we can grep version from binary image
 
 // Changing this number may reset all settings to default!
 #define CONFIG_FILE_VERSION 5
@@ -133,18 +133,21 @@ struct readingsStruct {
   String BMV_serial;  // BMV serial number
 
   // MPPT vars
-  float  MPPT_ytot;   // MPPT yield total (kWh)    H19
-  float  MPPT_yday;   // MPPT yield today (kWh)    H20
-  int    MPPT_Pmax;   // MPPT max power today (W)  H21
-  int    MPPT_err;    // MPPT error number         ERR
-  int    MPPT_state;  // MPPT state                CS
-  float  MPPT_Vbatt;  // MPPT output voltage (V)   V
-  float  MPPT_Ibatt;  // MPPT output current (A)   I
-  float  MPPT_Vpv;    // MPPT input voltage (V)    VPV
-  int    MPPT_Ppv;    // MPPT input power (W)      PPV
-  bool   MPPT_ok;     // MPPT checksum on last block OK
-  String MPPT_PID;    // MPPT Product ID
-  String MPPT_serial; // MPPT serial number
+  float  MPPT_ytot;       // MPPT yield total (kWh)    H19
+  float  MPPT_yday;       // MPPT yield today (kWh)    H20
+  int    MPPT_Pmax;       // MPPT max power today (W)  H21
+  int    MPPT_err;        // MPPT error number         ERR
+  int    MPPT_state;      // MPPT state                CS
+  float  MPPT_Vbatt;      // MPPT output voltage (V)   V
+  float  MPPT_Ibatt;      // MPPT output current (A)   I
+  float  MPPT_Vpv;        // MPPT input voltage (V)    VPV
+  int    MPPT_Ppv;        // MPPT input power (W)      PPV
+  bool   MPPT_ok;         // MPPT checksum on last block OK
+  String MPPT_PID;        // MPPT Product ID
+  String MPPT_serial;     // MPPT serial number
+  bool   MPPT_load_on;    // MPPT load output status
+  float  MPPT_Iload;      // MPPT load current
+  bool   MPPT_has_load=0; // MPPT has load output
 
   // GPS readings
   String GPS_fix;    // GPS status (active/timeout/void)

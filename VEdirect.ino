@@ -14,7 +14,7 @@ void readVEdirect(int device) {
   if(device == DEVICE_MPPT) {
     devicename = "MPPT";
   }
-  unsigned long vedirect_timeout = millis() + 2000L;
+  unsigned long vedirect_timeout = millis() + 4000L;
   // We get a block every second. However, a BMV sends different odd and even blocks.
   // This means it may take a little over two seconds to get to the block we want.
   if(device == DEVICE_BMV_B1 || device == DEVICE_BMV_B2) {
@@ -170,6 +170,20 @@ void parseMPPT(String line) {
   if (line.startsWith("SER#\t")) {
     readings.MPPT_serial = line.substring(5);
   }
+  // MPPT load current
+  if (line.startsWith("IL\t")) {
+    readings.MPPT_Iload = line.substring(3).toFloat() / 1000;
+    readings.MPPT_has_load=1;
+  }
+  // MPPT load status
+  if (line.startsWith("LOAD\t")) {
+    readings.MPPT_load_on = 0;
+    readings.MPPT_has_load=1;
+  }
+  if (line.startsWith("LOAD\tON")) {
+    readings.MPPT_load_on = 1;
+  }
+
 }
 
 void parseBMV(String line) {

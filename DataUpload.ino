@@ -46,7 +46,12 @@ void uploadInfluxReadings() {
     influx_post("Myday",  String(readings.MPPT_yday));
     influx_post("Mytot",  String(readings.MPPT_ytot));
   }
-
+  // load status and load current are not available on all MPPT's, values should
+  // only be written to influxdb if they are present.
+  if (readings.MPPT_ok && Settings.influx_write_mppt && readings.MPPT_has_load) {
+    influx_post("MIload",  String(readings.MPPT_Iload));
+    influx_post("Mload",  String(readings.MPPT_load_on));
+  }
   if (readings.BMV_B1_ok && Settings.influx_write_bmv) {
     influx_post("BVbatt", String(readings.BMV_Vbatt));
     influx_post("BVaux",   String(readings.BMV_Vaux));
