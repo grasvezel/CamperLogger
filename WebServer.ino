@@ -41,6 +41,7 @@ void handle_wificonfig() {
       content += "<option value=\"";
       String ssid = String(WiFi.SSID(i));
       content += ssid + "\">" + int(i + 1) + ": " + ssid + " ";
+      content += " (" + String(WiFi.RSSI(i)) + "dBm) "; 
       if (WiFi.encryptionType(i) != WIFI_AUTH_OPEN)
         content += "&#128274;";
       content += "\n";

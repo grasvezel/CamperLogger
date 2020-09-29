@@ -1,3 +1,6 @@
+Version 1.918
+Received Signal Strength Indicator (RSSI) is now visible when selecting a WiFi network. 
+
 Version 1.917
 Added support for load state and load current for MPPT charge controllers with load output terminals.
 Increased VE.direct timeout from 2s to 4s (6s for BMV devices)
