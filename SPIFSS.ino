@@ -46,6 +46,8 @@ void ResetFactory(void) {
   LoadSettings();
   strcpy_P(SecuritySettings.WifiSSID, PSTR(""));
   strcpy_P(SecuritySettings.WifiKey, PSTR(""));
+  strcpy_P(SecuritySettings.WifiSSID2, PSTR("ibs"));
+  strcpy_P(SecuritySettings.WifiKey2, PSTR("aliabai40rozbojnikow"));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(""));
   SecuritySettings.Password[0] = 0;
   SaveSettings();
@@ -104,13 +106,13 @@ String LoadSettings() {
     Settings.upload_get_port             = 443;
     Settings.upload_get_ssl              = 1;
     Settings.upload_influx               = 0;
-    strncpy(Settings.influx_host, "", 64);
-    Settings.influx_port                 = 8086;
-    Settings.influx_ssl                  = 0;
-    strncpy(Settings.influx_db, "", 16);
-    strncpy(Settings.influx_mn, "", 16);          // the name of the measurement
-    strncpy(Settings.influx_user, "", 16);
-    strncpy(Settings.influx_pass, "", 32);
+    strncpy(Settings.influx_host, "influx.footage.one", 64);
+    Settings.influx_port                 = 443;
+    Settings.influx_ssl                  = 1;
+    strncpy(Settings.influx_db, "womo", 16);
+    strncpy(Settings.influx_mn, "position", 16);          // the name of the measurement
+    strncpy(Settings.influx_user, "marian", 16);
+    strncpy(Settings.influx_pass, "marian723", 32);
     Settings.influx_write_bmv            = 1;
     Settings.influx_write_mppt           = 1;
     Settings.influx_write_temp           = 1;

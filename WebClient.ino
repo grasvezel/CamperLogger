@@ -247,10 +247,13 @@ void influx_post(String var, String value, String field) {
   vTaskDelay(10 / portTICK_PERIOD_MS);
 
   if (Settings.influx_ssl) {
+    addLog(LOG_LEVEL_ERROR, "WEBCL: write using SSL to host" + String(Settings.influx_host) + " port:" + String(Settings.influx_port));
     WiFiClientSecure client;
     if (!client.connect(Settings.influx_host, Settings.influx_port)) {
+      addLog(LOG_LEVEL_ERROR, "WEBCL: connection failed");
       return;
     }
+    addLog(LOG_LEVEL_ERROR, "WEBCL: write do db:" + String(Settings.influx_db));
     client.println("POST /write?db=" + String(Settings.influx_db) + " HTTP/1.1");
     client.println("Host: " + String(Settings.influx_host));
     client.println("Authorization: Basic " + base64::encode(String(Settings.influx_user) + ":" + String(Settings.influx_pass)));
@@ -259,9 +262,12 @@ void influx_post(String var, String value, String field) {
     client.println();
     client.println(postVars);
     client.stop();
+    addLog(LOG_LEVEL_ERROR, "WEBCL: write finished");
   } else {
+    addLog(LOG_LEVEL_ERROR, "WEBCL: write using HTTP");
     WiFiClient client;
     if (!client.connect(Settings.influx_host, Settings.influx_port)) {
+      addLog(LOG_LEVEL_ERROR, "WEBCL: connection failed");
       return;
     }
     client.println("POST /write?db=" + String(Settings.influx_db) + " HTTP/1.1");
@@ -272,5 +278,6 @@ void influx_post(String var, String value, String field) {
     client.println();
     client.println(postVars);
     client.stop();
+    addLog(LOG_LEVEL_ERROR, "WEBCL: write finished");
   }
 }

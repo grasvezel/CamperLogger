@@ -29,59 +29,16 @@ void runBackgroundTasks() {
     vTaskDelay(20000 / portTICK_PERIOD_MS);
     firstbgrun = 0;
   }
-  // Read Victron BMV battary monitor
-  if (read_ve_direct_bmv) {
-    SerialVE.begin(19200, SERIAL_8N1, VE_DIRECT_PIN_1, -1, true);
-
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-    readVEdirect(DEVICE_BMV_B1);
-
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-    readVEdirect(DEVICE_BMV_B2);
-
-    SerialVE.end();
-    handleCharging();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-
-  // Read Victron MPPT charge controller
-  if (read_ve_direct_mppt) {
-    SerialVE.begin(19200, SERIAL_8N1, VE_DIRECT_PIN_2, -1, true);
-
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-    readVEdirect(DEVICE_MPPT);
-
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-    SerialVE.end();
-  }
 
   vTaskDelay(10 / portTICK_PERIOD_MS);
   readGPS();
+              Serial.print("satelites:" ); Serial.print(readings.GPS_sat);  Serial.print(" status:"); Serial.println(GPS_present);
 
   vTaskDelay(10 / portTICK_PERIOD_MS);
   readTemperatureSensors();
-
-  vTaskDelay(10 / portTICK_PERIOD_MS);
-  readWaterTankLevelSensor();
-  readGasTankLevelSensor();
-
+  
   // Now that we have read all devices, build inventory list
   inventory = "";
-  if(readings.BMV_PID != "") {
-    inventory += "VE.direct port 1:\n" + getVictronDeviceByPID(readings.BMV_PID)  + " (PID " + readings.BMV_PID  + ")\n";
-    if(readings.BMV_serial != "") {
-      inventory += "Serial number: " + readings.BMV_serial  + "\n";
-    }
-    inventory += "\n";
-  }
-
-  if(readings.MPPT_PID != "") {
-    inventory += "VE.direct port 2:\n" + getVictronDeviceByPID(readings.MPPT_PID) + " (PID " + readings.MPPT_PID + ")\n";
-    if(readings.MPPT_serial != "") {
-      inventory += "Serial number: " + readings.MPPT_serial + "\n"; 
-    }
-    inventory += "\n";
-  }
 
   if(GPS_present) {
     inventory += "GPS module detected";

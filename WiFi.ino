@@ -61,7 +61,11 @@ boolean WifiConnect(byte connectAttempts) {
   WiFi.setHostname(hostname);
 
   //try to connect to the ap
-  if (WifiConnectSSID(SecuritySettings.WifiSSID,  SecuritySettings.WifiKey,  connectAttempts)) {
+  if (WifiConnectSSID(SecuritySettings.WifiSSID2,  SecuritySettings.WifiKey2,  connectAttempts)) {
+    nextSyncTime = sysTime;
+    now();
+    return (true);
+  } else if (WifiConnectSSID(SecuritySettings.WifiSSID,  SecuritySettings.WifiKey,  connectAttempts)) {
     nextSyncTime = sysTime;
     now();
     return (true);

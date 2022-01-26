@@ -1,4 +1,7 @@
 void OTA() {
+  // disable OTA
+  return;
+  
   if (WiFi.status() != WL_CONNECTED)
     return;
 

@@ -7,11 +7,4 @@ float chargeOnAt  = 26.50;
 float chargeOffAt = 26.00;
 
 void handleCharging() {
-  if(readings.BMV_Vbatt >= chargeOnAt) {
-    readings.Charger = 1;
-  }
-  if(readings.BMV_Vbatt <= chargeOffAt) {
-    readings.Charger = 0;
-  }
-  digitalWrite(RELAY_PIN_1, readings.Charger);
 }
