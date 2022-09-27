@@ -14,12 +14,13 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <WiFiClientSecure.h>
+#include <HTTPClient.h>
 #include <Update.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <base64.h>
 #include <TinyGPSPlus.h>
-#include "influxdb.h"
+
 
 static float version              = 2.0;
 static String verstr              = "Version 2.0";   //Make sure we can grep version from binary image
@@ -42,17 +43,12 @@ typedef struct SettingsStruct {
   char          influx_mn[16];
   char          influx_user[16];
   char          influx_pass[32];
-  bool          influx_write_bmv;
-  bool          influx_write_mppt;
   bool          influx_write_temp;
-  bool          influx_write_water;
   bool          influx_write_geohash;
   bool          influx_write_coords;
   bool          influx_write_speed_heading;
   int           gps_upload_interval;
   int           readings_upload_interval;
-  // new in config file version 5:
-  bool          influx_write_gas;
 };
 
 SettingsStruct Settings;
@@ -71,7 +67,7 @@ byte logLevel                     = 4;                // not a #define, logLevel
 
 // TIME SETTINGS
 // DST setting is stored in settings struct and is updated from the server
-#define NTP_SERVER                  "pool.ntp.org"
+#define NTP_SERVER                  "time.euro.apple.com"   // "pool.ntp.org"
 #define TIME_ZONE                   60                // minutes ahead of GMT during winter.
 
 // Geohash
@@ -81,10 +77,10 @@ byte logLevel                     = 4;                // not a #define, logLevel
 #define DEFAULT_PASSWORD            "loggerconfig"
 
 // PIN DEFINITIONS
-#define PIN_STATUS_LED              1                 // LED on ESP32 dev board
-#define PIN_EXT_LED                 13                // LED on PCB
-#define WIFI_RECONNECT_INTERVAL     300               // seconds
-#define GPS_PIN                     27                // serial
+#define PIN_STATUS_LED              2                // LED on ESP32 dev board
+#define PIN_EXT_LED                 13               // LED on PCB
+#define WIFI_RECONNECT_INTERVAL     300              // seconds
+#define GPS_PIN                     27               // serial
 #define ONEWIRE_PIN                 2                // one wire input (temperature sensors)
 
 TaskHandle_t BackgroundTask;
@@ -106,7 +102,7 @@ struct readingsStruct {
   // GPS readings
   String GPS_fix;    // GPS status (active/timeout/void)
   String GPS_date;   // GPS date DDMMYY
-  String GPS_time;   // GPS time HHMMSS (in UTC!)
+  String GPS_time;   // GPS time HHMMSSCC (in UTC!)
   String GPS_lat;    // GPS latitude (0...90 N or S)
   String GPS_lat_abs;// GPS latitude (-90...90)
   String GPS_lon;    // GPS longitude (0...180 E or W)
@@ -156,11 +152,13 @@ unsigned long nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
 // prototypes with default ports for http and https
 String httpsGet(String path, String query, int port = 443);
 String httpGet(String path, String query, int port = 80);
-void influx_post(String var, String value, String field = "value");
 
 OneWire oneWire(ONEWIRE_PIN);
 
 WebServer WebServer(80);
+
+// enable or disable OTA
+boolean otaEnabled = false;
 
 // Serial ports
 // UART 0 is used for the console. Because the ESP32 has 3 UARTs and we need 3,
@@ -236,19 +234,9 @@ void setup() {
   delay(100);
   WebServerInit();
 
-
   // Add tags
 //  sensor.addTag("device", DEVICE);
 //  sensor.addTag("SSID", WiFi.SSID());
-
-  // Check server connection
-  if (client.validateConnection()) {
-    Serial.print("Connected to InfluxDB: ");
-    Serial.println(client.getServerUrl());
-  } else {
-    Serial.print("InfluxDB connection failed: ");
-    Serial.println(client.getLastErrorMessage());
-  }
 
   // reportResetReason();      // report to the backend what caused the reset
   // callHome();               // get settings and current software version from server
@@ -270,7 +258,7 @@ void loop() {
       delay(100);
     }
     
-    addLog(LOG_LEVEL_INFO, "CORE : Uploading readings");
+    addLog(LOG_LEVEL_INFO, "CORE : Uploading readings");    
     digitalWrite(PIN_EXT_LED, HIGH);
     //callHome();
     //uploadGetData();
@@ -289,7 +277,10 @@ void loop() {
     addLog(LOG_LEVEL_INFO, "CORE : Uploading GPS data");
     digitalWrite(PIN_EXT_LED, HIGH);
     digitalWrite(PIN_EXT_LED, LOW);
-    uploadInfluxGPS();
+    if (GPS_present) {
+      // uploadInfluxGPS();
+      sendDataToLogServer();
+    }
     pause_background_tasks = 0;
   }
 

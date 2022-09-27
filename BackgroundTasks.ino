@@ -32,7 +32,6 @@ void runBackgroundTasks() {
 
   vTaskDelay(10 / portTICK_PERIOD_MS);
   readGPS();
-              Serial.print("satelites:" ); Serial.print(readings.GPS_sat);  Serial.print(" status:"); Serial.println(GPS_present);
 
   vTaskDelay(10 / portTICK_PERIOD_MS);
   readTemperatureSensors();

@@ -12,6 +12,7 @@ void WebServerInit() {
   WebServer.on("/savecfg", handle_savecfg);
   WebServer.on("/json", handle_json);
   WebServer.on("/reset", ResetFactory);
+  WebServer.on("/ota", OTA);
 
   WebServer.onNotFound(handle_notfound);
 
@@ -46,6 +47,8 @@ void handle_wificonfig() {
     }
     content += "</select></td></tr>";
     content += "<tr><td>Key:</td><td><input type=\"password\" name=\"pw\"></td></tr>\n";
+    content += "<tr><td>SSID2:</td><td><input name=\"ssid2\"></td></tr>\n";
+    content += "<tr><td>Key2:</td><td><input type=\"password\" name=\"pw2\"></td></tr>\n";
     content += "<tr><td>&nbsp;</td><td><input type=\"submit\" value=\"Save\"></td></tr>\n";
     content += "</table>\n";
     content += "</form>";
@@ -60,6 +63,10 @@ void handle_savewificonfig() {
       WebServer.arg(i).toCharArray(SecuritySettings.WifiSSID, 32);
     if (WebServer.argName(i) == "pw")
       WebServer.arg(i).toCharArray(SecuritySettings.WifiKey, 64);
+    if (WebServer.argName(i) == "ssid2")
+      WebServer.arg(i).toCharArray(SecuritySettings.WifiSSID2, 32);
+    if (WebServer.argName(i) == "pw2")
+      WebServer.arg(i).toCharArray(SecuritySettings.WifiKey2, 64);
   }
   addLog(LOG_LEVEL_DEBUG, "WEB  : Config request: SSID: " + String(SecuritySettings.WifiSSID) + " Key: " + String(SecuritySettings.WifiKey));
   addLog(LOG_LEVEL_INFO, "WEB  : Saving settings... " + SaveSettings());
@@ -156,11 +163,6 @@ void handle_cfg() {
   if (Settings.influx_write_temp)
     content += " checked";
   content += " name=\"idb_temp\" value=\"1\"></td></tr>";
-
-  content += "<tr><td>Water level</td><td><input type=\"checkbox\"";
-  if (Settings.influx_write_water)
-    content += " checked";
-  content += " name=\"idb_tank\" value=\"1\"></td></tr>";
 
   content += "<tr><td>GPS coords</td><td><input type=\"checkbox\"";
   if (Settings.influx_write_coords)

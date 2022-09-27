@@ -1,19 +1,12 @@
 void readGPS() {
   unsigned long timeout = millis() + 4000L;
   while (timeout > millis()) {
-
-
-    while (SerialGPS.available() > 0)
+    while (SerialGPS.available() > 0){
       gpsParser.encode(SerialGPS.read());
+    }
     readings.GPS_sat = gpsParser.satellites.value();
     if (gpsParser.location.isValid()) {
       GPS_present = 1;
-      /*
-      Serial.print("LAT=");  Serial.println(gpsParser.location.lat(), 6);
-      Serial.print("LONG="); Serial.println(gpsParser.location.lng(), 6);
-      Serial.print("ALT=");  Serial.println(gpsParser.altitude.meters());
-      Serial.print("SAT=");  Serial.println(gpsParser.satellites.value()); // Number of satellites in use (u32)
-      */
       readings.GPS_fix = "T";
       readings.GPS_date = gpsParser.date.value();
       readings.GPS_time = gpsParser.time.value();
