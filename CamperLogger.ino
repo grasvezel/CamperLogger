@@ -216,7 +216,8 @@ void setup() {
     ledChannelPin[x] = -1;
 
   // get chip MAC
-  esp_efuse_read_mac(chipid);
+  //esp_efuse_read_mac(chipid);
+  esp_efuse_mac_get_default(chipid);
   sprintf(chipMAC, "%02x%02x%02x%02x%02x%02x", chipid[0], chipid[1], chipid[2], chipid[3], chipid[4], chipid[5]);
 
   fileSystemCheck();
