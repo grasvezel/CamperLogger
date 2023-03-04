@@ -242,35 +242,47 @@ void uploadFile(String content, String type) {
   }
 }
 
-void influx_post(String var, String value, String field) {
-  String postVars = String(Settings.influx_mn) + ",item=" + var + ",logger=" + String(chipMAC) + " " + field + "=" + value;
-  vTaskDelay(10 / portTICK_PERIOD_MS);
+void sendDataToLogServer(){
 
-  if (Settings.influx_ssl) {
-    WiFiClientSecure client;
-    if (!client.connect(Settings.influx_host, Settings.influx_port)) {
-      return;
+    WiFiClient wifiClient;
+    HTTPClient http;
+
+    addLog(LOG_LEVEL_INFO, "DATA : Uploading readings to server");
+    String serverUrl = "http://" + String(Settings.upload_get_host) + ":" + String(Settings.upload_get_port) + "/log";
+    if (http.begin(wifiClient, serverUrl)) {  // HTTP "http://192.168.40.187:7070/log"
+
+      http.addHeader("Content-Type", "application/json");
+      String body;
+      body = "{\"from\":\"" + String(now());
+      body += "\",\"dop\":\"" + readings.GPS_dop;
+      body += "\",\"sat\":\"" + readings.GPS_sat;
+      body += "\",\"lat\":\"" + readings.GPS_lat;
+      body += "\",\"lon\":\"" + readings.GPS_lon;
+      body += "\",\"alt\":\"" + readings.GPS_alt;
+      body += "\",\"time\":\"" + readings.GPS_time;
+      body += "\",\"date\":\"" + readings.GPS_date;
+      body += "\",\"hash\":\"" + readings.GPS_geohash;
+      body += "\"}";
+
+      String message = "DATA : Uploading readings to server:" + serverUrl;
+      addLog(LOG_LEVEL_INFO, message);
+
+      int httpCode = http.POST(body);
+      // httpCode will be negative on error
+      if (httpCode > 0) {
+        String message = "DATA : Uploading readings to server response:" + String(httpCode);
+        addLog(LOG_LEVEL_INFO, message);
+        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+          String payload = http.getString();
+          Serial.println(payload);
+        }
+      } else {
+        String message = "DATA : Uploading readings to server response:" + http.errorToString(httpCode);
+        addLog(LOG_LEVEL_INFO, message);
+      }
+
+      http.end();
+    } else {
+        addLog(LOG_LEVEL_INFO, "DATA : unable to connect");
     }
-    client.println("POST /write?db=" + String(Settings.influx_db) + " HTTP/1.1");
-    client.println("Host: " + String(Settings.influx_host));
-    client.println("Authorization: Basic " + base64::encode(String(Settings.influx_user) + ":" + String(Settings.influx_pass)));
-    client.println("Connection: close");
-    client.println("Content-length: " + String(postVars.length()));
-    client.println();
-    client.println(postVars);
-    client.stop();
-  } else {
-    WiFiClient client;
-    if (!client.connect(Settings.influx_host, Settings.influx_port)) {
-      return;
-    }
-    client.println("POST /write?db=" + String(Settings.influx_db) + " HTTP/1.1");
-    client.println("Host: " + String(Settings.influx_host));
-    client.println("Authorization: Basic " + base64::encode(String(Settings.influx_user) + ":" + String(Settings.influx_pass)));
-    client.println("Connection: close");
-    client.println("Content-length: " + String(postVars.length()));
-    client.println();
-    client.println(postVars);
-    client.stop();
-  }
 }

@@ -1,14 +1,6 @@
 /*
     1-WIRE            GPIO 26
     GPS               GPIO 27
-    VE.Direct 1       GPIO 32
-    VE.Direct 2       GPIO 36
-    LED               GPIO 13
-    RELAY 1           GPIO 16
-    RELAY 2           GPIO 21
-    Water tank sensor GPIO 33
-    Gas tank sensor   GPIO 39 NOTE: Requires a jumper wire, connector is wired to pin 25!
-    Not used          GPIO 17
 */
 
 // Partition scheme: Minimal SPIFFS (1.9MB APP with OTA)/190KB SPIFFS)
@@ -20,15 +12,18 @@
 #include "esp_log.h"
 #include <ctype.h>
 #include <WiFi.h>
-#include <ESP32WebServer.h>
+#include <WebServer.h>
 #include <WiFiClientSecure.h>
+#include <HTTPClient.h>
 #include <Update.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <base64.h>
+#include <TinyGPSPlus.h>
 
-static float version              = 1.918;
-static String verstr              = "Version 1.918";   //Make sure we can grep version from binary image
+
+static float version              = 2.0;
+static String verstr              = "Version 2.0";   //Make sure we can grep version from binary image
 
 // Changing this number may reset all settings to default!
 #define CONFIG_FILE_VERSION 5
@@ -48,17 +43,12 @@ typedef struct SettingsStruct {
   char          influx_mn[16];
   char          influx_user[16];
   char          influx_pass[32];
-  bool          influx_write_bmv;
-  bool          influx_write_mppt;
   bool          influx_write_temp;
-  bool          influx_write_water;
   bool          influx_write_geohash;
   bool          influx_write_coords;
   bool          influx_write_speed_heading;
   int           gps_upload_interval;
   int           readings_upload_interval;
-  // new in config file version 5:
-  bool          influx_write_gas;
 };
 
 SettingsStruct Settings;
@@ -77,7 +67,7 @@ byte logLevel                     = 4;                // not a #define, logLevel
 
 // TIME SETTINGS
 // DST setting is stored in settings struct and is updated from the server
-#define NTP_SERVER                  "pool.ntp.org"
+#define NTP_SERVER                  "time.euro.apple.com"   // "pool.ntp.org"
 #define TIME_ZONE                   60                // minutes ahead of GMT during winter.
 
 // Geohash
@@ -87,21 +77,11 @@ byte logLevel                     = 4;                // not a #define, logLevel
 #define DEFAULT_PASSWORD            "loggerconfig"
 
 // PIN DEFINITIONS
-#define PIN_STATUS_LED              2                 // LED on ESP32 dev board
-#define PIN_EXT_LED                 13                // LED on PCB
-#define WIFI_RECONNECT_INTERVAL     300               // seconds
-#define GPS_PIN                     27                // serial
-#define ONEWIRE_PIN                 26                // one wire input (temperature sensors)
-#define RELAY_PIN_1                 16                // 12v charger control
-#define RELAY_PIN_2                 21                // 
-#define VE_DIRECT_PIN_1             32                // opto isolated input (RS-232 TTL)
-#define VE_DIRECT_PIN_2             36                // opto isolated input (RS-232 TTL)
-#define WATER_LEVEL_SENSOR_PIN      33                // Analog water tank level sensor input
-#define GAS_LEVEL_SENSOR_PIN        39                // Analog gas tank level sensor input
-
-#define DEVICE_BMV_B1               1                 // Block one of the BMV output
-#define DEVICE_BMV_B2               2                 // Block two of the BMV output
-#define DEVICE_MPPT                 3                 // MPPT output has only one block
+#define PIN_STATUS_LED              2                // LED on ESP32 dev board
+#define PIN_EXT_LED                 13               // LED on PCB
+#define WIFI_RECONNECT_INTERVAL     300              // seconds
+#define GPS_PIN                     27               // serial
+#define ONEWIRE_PIN                 2                // one wire input (temperature sensors)
 
 TaskHandle_t BackgroundTask;
 
@@ -119,62 +99,27 @@ struct readingsStruct {
   // Temperature sensors
   float temp[10];   // max 10 temperature sensors (deg C)
 
-  // BMV vars
-  float  BMV_Vbatt;   // BMV battery voltage (V)
-  float  BMV_Vaux;    // BMV auxilary voltage (V)
-  float  BMV_SOC;     // BMV State Of Charge (%)
-  float  BMV_Ibatt ;  // BMV battery current (A)
-  int    BMV_Pbatt;   // BMV charge power (W)
-  int    BMV_TTG;     // BMV Time To Go (minutes)
-  float  BMV_LDD;     // BMV Last Discharge Depth (Ah)
-  bool   BMV_B1_ok;   // BMV checksum on block one OK
-  bool   BMV_B2_ok;   // BMV checksum on block two OK
-  String BMV_PID;     // BMV Product ID
-  String BMV_serial;  // BMV serial number
-
-  // MPPT vars
-  float  MPPT_ytot;       // MPPT yield total (kWh)    H19
-  float  MPPT_yday;       // MPPT yield today (kWh)    H20
-  int    MPPT_Pmax;       // MPPT max power today (W)  H21
-  int    MPPT_err;        // MPPT error number         ERR
-  int    MPPT_state;      // MPPT state                CS
-  float  MPPT_Vbatt;      // MPPT output voltage (V)   V
-  float  MPPT_Ibatt;      // MPPT output current (A)   I
-  float  MPPT_Vpv;        // MPPT input voltage (V)    VPV
-  int    MPPT_Ppv;        // MPPT input power (W)      PPV
-  bool   MPPT_ok;         // MPPT checksum on last block OK
-  String MPPT_PID;        // MPPT Product ID
-  String MPPT_serial;     // MPPT serial number
-  bool   MPPT_load_on;    // MPPT load output status
-  float  MPPT_Iload;      // MPPT load current
-  bool   MPPT_has_load=0; // MPPT has load output
-
   // GPS readings
   String GPS_fix;    // GPS status (active/timeout/void)
   String GPS_date;   // GPS date DDMMYY
-  String GPS_time;   // GPS time HHMMSS (in UTC!)
+  String GPS_time;   // GPS time HHMMSSCC (in UTC!)
   String GPS_lat;    // GPS latitude (0...90 N or S)
   String GPS_lat_abs;// GPS latitude (-90...90)
   String GPS_lon;    // GPS longitude (0...180 E or W)
   String GPS_lon_abs;// GPS longitude (-180...180)
   String GPS_speed;  // GPS speed in km/h
+  String GPS_alt;    // GPS altitude in m
+  String GPS_sat;    // GPS amount of satelites
+  String GPS_dop;    // GPS dop/hdop
   String GPS_heading;// GPS heading (in deg, 0 if not moving)
   String GPS_geohash;// Geohash
+  String GPS_GPRMCsentence; // komplete sentences from GPS
+  String GPS_GPVTGsentence; // komplete sentences from GPS
+  String GPS_GPGGAsentence; // komplete sentences from GPS
 
-  // water tank
-  int   Water_level;  // Water tank level (%)
-
-  // gas tank
-  int   Gas_level;    // Gas tank level (%)
-
-  // 12v charger
-  int   Charger;  // 12v charger on
 } readings;
 
 // DATA COLLECTION VARIABLES
-String lastBlockBMV_1 = "";
-String lastBlockBMV_2 = "";
-String lastBlockMPPT = "";
 String inventory = "";
 bool   inventory_complete = 0;
 int    nr_of_temp_sensors = 0;
@@ -183,16 +128,12 @@ bool   inventory_requested = 0;
 // We are only going to upload readings from connected devices.
 // These values will be set to 1 after the first valid reading
 // from the respective device is received.
-bool BMV_present = 0;
-bool MPPT_present = 0;
 bool GPS_present = 0;
 
 // toggle different data sources. Do we need this?
-bool read_ve_direct_bmv  = 1;    // read BMV or skip it?
-bool read_ve_direct_mppt = 1;    // read MPPT or skip it?
-bool read_temp           = 1;    // read temperature sensors or skip it?
+bool read_temp           = 0;    // read temperature sensors or skip it?
 bool read_gps            = 1;    // read GPS data or skip it?
-bool read_water_level     = 1;    // read tank level sensor or skip it?
+bool read_water_level     = 0;    // read tank level sensor or skip it?
 
 String Fcrc;
 uint8_t ledChannelPin[16];
@@ -211,17 +152,29 @@ unsigned long nextWifiRetry = millis() + WIFI_RECONNECT_INTERVAL * 1000;
 // prototypes with default ports for http and https
 String httpsGet(String path, String query, int port = 443);
 String httpGet(String path, String query, int port = 80);
-void influx_post(String var, String value, String field = "value");
 
 OneWire oneWire(ONEWIRE_PIN);
 
-ESP32WebServer WebServer(80);
+WebServer WebServer(80);
+
+// enable or disable OTA
+boolean otaEnabled = false;
 
 // Serial ports
 // UART 0 is used for the console. Because the ESP32 has 3 UARTs and we need 3,
 // HardwareSerial(2) is switched to the according pin if we want to read BMV or MPPT.
 HardwareSerial SerialGPS(1);     // GPS input (NMEA)
-HardwareSerial SerialVE(2);      // VE direct connections
+//HardwareSerial SerialVE(2);      // VE direct connections
+
+//void onRmcUpdate(nmea::RmcData const);
+//void onGgaUpdate(nmea::GgaData const);
+  TinyGPSPlus gpsParser;
+
+/**************************************************************************************
+ * GLOBAL VARIABLES
+ **************************************************************************************/
+
+//ArduinoNmeaParser parser(onRmcUpdate, onGgaUpdate);
 
 void backgroundTasks(void * parameter) {
   for (;;) {
@@ -239,12 +192,6 @@ void setup() {
   pinMode(PIN_STATUS_LED, OUTPUT);
   pinMode(PIN_EXT_LED, OUTPUT);
   pinMode(GPS_PIN, INPUT);
-  pinMode(RELAY_PIN_1, OUTPUT);
-  pinMode(RELAY_PIN_2, OUTPUT);
-  pinMode(VE_DIRECT_PIN_1, INPUT);
-  pinMode(VE_DIRECT_PIN_2, INPUT);
-  pinMode(WATER_LEVEL_SENSOR_PIN, INPUT);
-  pinMode(GAS_LEVEL_SENSOR_PIN, INPUT);
   pinMode(25, INPUT); // GPIO25 is parallel wired to GPIO39 because we can not use ADC2!
   
   digitalWrite(PIN_EXT_LED, HIGH);
@@ -287,8 +234,12 @@ void setup() {
   delay(100);
   WebServerInit();
 
-  reportResetReason();      // report to the backend what caused the reset
-  callHome();               // get settings and current software version from server
+  // Add tags
+//  sensor.addTag("device", DEVICE);
+//  sensor.addTag("SSID", WiFi.SSID());
+
+  // reportResetReason();      // report to the backend what caused the reset
+  // callHome();               // get settings and current software version from server
   addLog(LOG_LEVEL_INFO, "CORE : Setup done. Starting main loop");
 
 }
@@ -306,18 +257,19 @@ void loop() {
     while(!background_tasks_paused) {
       delay(100);
     }
-    addLog(LOG_LEVEL_INFO, "CORE : Uploading readings");
+    
+    addLog(LOG_LEVEL_INFO, "CORE : Uploading readings");    
     digitalWrite(PIN_EXT_LED, HIGH);
-    callHome();
-    uploadGetData();
-    uploadInfluxReadings();
+    //callHome();
+    //uploadGetData();
+    //uploadInfluxReadings();
     digitalWrite(PIN_EXT_LED, LOW);
     pause_background_tasks = 0;
   }
 
   // Upload GPS data
   if (timerGPS != 0 && timeOutReached(timerGPS) && WiFi.status() == WL_CONNECTED) {
-    timerGPS = millis() + Settings.gps_upload_interval * 1000L;
+    timerGPS = millis() + Settings.gps_upload_interval * 100L;
     pause_background_tasks = 1;
     while(!background_tasks_paused) {
       delay(100);
@@ -325,7 +277,10 @@ void loop() {
     addLog(LOG_LEVEL_INFO, "CORE : Uploading GPS data");
     digitalWrite(PIN_EXT_LED, HIGH);
     digitalWrite(PIN_EXT_LED, LOW);
-    uploadInfluxGPS();
+    if (GPS_present) {
+      // uploadInfluxGPS();
+      sendDataToLogServer();
+    }
     pause_background_tasks = 0;
   }
 

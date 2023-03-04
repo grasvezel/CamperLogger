@@ -61,10 +61,17 @@ boolean WifiConnect(byte connectAttempts) {
   WiFi.setHostname(hostname);
 
   //try to connect to the ap
-  if (WifiConnectSSID(SecuritySettings.WifiSSID,  SecuritySettings.WifiKey,  connectAttempts)) {
+  if (WifiConnectSSID(SecuritySettings.WifiSSID2,  SecuritySettings.WifiKey2,  connectAttempts)) {
     nextSyncTime = sysTime;
     now();
     return (true);
+  } else {
+    addLog(LOG_LEVEL_INFO, F("WIFI : tray connect to second wifi"));
+    if (WifiConnectSSID(SecuritySettings.WifiSSID,  SecuritySettings.WifiKey,  connectAttempts)) {
+       nextSyncTime = sysTime;
+       now();
+       return (true);
+    }
   }
 
   addLog(LOG_LEVEL_ERROR, F("WIFI : Could not connect to AP!"));
@@ -87,7 +94,10 @@ boolean WifiConnectSSID(char WifiSSID[], char WifiKey[], byte connectAttempts)
 
   //no ssid specified
   if ((WifiSSID[0] == 0)  || (strcasecmp(WifiSSID, "ssid") == 0))
+  {
+    addLog(LOG_LEVEL_INFO, F("WIFI : ssid empty!"));
     return (false);
+  }
 
   for (byte tryConnect = 1; tryConnect <= connectAttempts; tryConnect++)
   {

@@ -46,6 +46,8 @@ void ResetFactory(void) {
   LoadSettings();
   strcpy_P(SecuritySettings.WifiSSID, PSTR(""));
   strcpy_P(SecuritySettings.WifiKey, PSTR(""));
+  strcpy_P(SecuritySettings.WifiSSID2, PSTR(""));
+  strcpy_P(SecuritySettings.WifiKey2, PSTR(""));
   strcpy_P(SecuritySettings.WifiAPKey, PSTR(""));
   SecuritySettings.Password[0] = 0;
   SaveSettings();
@@ -89,9 +91,7 @@ String LoadSettings() {
   String error;
   error = LoadFromFile((char*)FILE_SETTINGS, 0, (byte*)&Settings, sizeof(struct SettingsStruct));
   if(Settings.config_file_version == 4 && CONFIG_FILE_VERSION == 5) {
-    // upgrade config file version 4 to version 5
     addLog(LOG_LEVEL_INFO, "FILE : Config file upgrade 4->5");
-    Settings.influx_write_gas            = 1;
     Settings.config_file_version         = 5;
     settings_changed = 1;
   }
@@ -100,24 +100,9 @@ String LoadSettings() {
     Settings.config_file_version         = CONFIG_FILE_VERSION;
     Settings.DST                         = 0;
     Settings.upload_get                  = 1;
-    strncpy(Settings.upload_get_host, "bus.tarthorst.net", 64);
-    Settings.upload_get_port             = 443;
+    strncpy(Settings.upload_get_host, "camper-logger.footage.one", 64); // "http://192.168.40.187:7070/log"
+    Settings.upload_get_port             = 80;
     Settings.upload_get_ssl              = 1;
-    Settings.upload_influx               = 0;
-    strncpy(Settings.influx_host, "", 64);
-    Settings.influx_port                 = 8086;
-    Settings.influx_ssl                  = 0;
-    strncpy(Settings.influx_db, "", 16);
-    strncpy(Settings.influx_mn, "", 16);          // the name of the measurement
-    strncpy(Settings.influx_user, "", 16);
-    strncpy(Settings.influx_pass, "", 32);
-    Settings.influx_write_bmv            = 1;
-    Settings.influx_write_mppt           = 1;
-    Settings.influx_write_temp           = 1;
-    Settings.influx_write_water          = 1;
-    Settings.influx_write_geohash        = 1;
-    Settings.influx_write_coords         = 1;
-    Settings.influx_write_speed_heading  = 1;
     Settings.gps_upload_interval         = 60;               // seconds
     Settings.readings_upload_interval    = 60;               // seconds
     SaveSettings();
